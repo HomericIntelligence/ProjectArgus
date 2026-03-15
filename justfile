@@ -1,5 +1,7 @@
 # === Variables ===
 
+compose_cmd := if `which podman-compose 2>/dev/null` != "" { "podman-compose" } else { "docker compose" }
+
 MAESTRO_URL := "http://172.20.0.1:23000"
 GRAFANA_PORT := "3000"
 GRAFANA_URL  := "http://localhost:" + GRAFANA_PORT
@@ -14,19 +16,19 @@ default:
 
 # Start all observability services
 start:
-    docker compose up -d
+    {{compose_cmd}} up -d
 
 # Stop all services
 stop:
-    docker compose down
+    {{compose_cmd}} down
 
 # Show running container status
 status:
-    docker compose ps
+    {{compose_cmd}} ps
 
 # Tail logs for a specific service (e.g. just logs prometheus)
 logs SERVICE:
-    docker compose logs -f {{SERVICE}}
+    {{compose_cmd}} logs -f {{SERVICE}}
 
 # === Prometheus ===
 
