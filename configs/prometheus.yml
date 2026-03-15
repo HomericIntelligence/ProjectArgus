@@ -1,0 +1,29 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/rules/*.yml
+
+scrape_configs:
+  - job_name: 'ai-maestro'
+    static_configs:
+      - targets: ['172.20.0.1:23000']
+    metrics_path: '/api/diagnostics'
+
+  - job_name: 'ai-maestro-agents'
+    static_configs:
+      - targets: ['172.20.0.1:23000']
+    metrics_path: '/api/agents/health'
+
+  - job_name: 'nats'
+    static_configs:
+      - targets: ['localhost:8222']
+    metrics_path: '/metrics'
+
+  - job_name: 'nomad'
+    static_configs:
+      - targets: ['localhost:4646']
+    metrics_path: '/v1/metrics'
+    params:
+      format: ['prometheus']

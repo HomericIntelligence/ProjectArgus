@@ -1,0 +1,82 @@
+# ProjectArgus — CLAUDE.md
+
+## Project Overview
+
+ProjectArgus is the observability stack for the HomericIntelligence ecosystem. It collects metrics from ai-maestro, NATS, Nomad, and all running containers, aggregates logs via Promtail → Loki, and exposes everything through Grafana dashboards.
+
+**Important**: ProjectArgus only reads from other services via HTTP scrapes and log tailing. It does NOT modify ai-maestro or any other HomericIntelligence service.
+
+## Stack Components
+
+| Service    | Image                     | Purpose                                 |
+|------------|---------------------------|-----------------------------------------|
+| Prometheus | prom/prometheus:latest    | Scrape and store metrics                |
+| Loki       | grafana/loki:latest       | Store and query log streams             |
+| Promtail   | grafana/promtail:latest   | Tail container logs and ship to Loki    |
+| Grafana    | grafana/grafana:latest    | Visualize metrics and logs              |
+
+All services run on the `argus` Docker network and are managed via `docker-compose.yml`.
+
+## Scrape Targets
+
+| Job               | Host              | Path                  | What it provides              |
+|-------------------|-------------------|-----------------------|-------------------------------|
+| ai-maestro        | 172.20.0.1:23000  | /api/diagnostics      | System-level health metrics   |
+| ai-maestro-agents | 172.20.0.1:23000  | /api/agents/health    | Per-agent health and status   |
+| nats              | localhost:8222    | /metrics              | Message rates, stream storage |
+| nomad             | localhost:4646    | /v1/metrics           | Job and allocation metrics    |
+
+`172.20.0.1` is the WSL2 host gateway — this reaches services running on the Windows host or in other WSL distros.
+
+## Dashboard Descriptions
+
+- **agent-health.json** (`uid: agent-health`): Total agent count, active vs. hibernated agents, per-agent uptime. Stat and timeseries panels backed by Prometheus.
+- **nats-events.json** (`uid: nats-events`): NATS message throughput, JetStream storage used, distinct subject counts.
+- **task-throughput.json** (`uid: task-throughput`): Tasks created/completed/failed per hour; Keystone dispatch latency histogram.
+
+## Repository Structure
+
+```
+ProjectArgus/
+├── configs/
+│   ├── prometheus.yml        # Scrape configs
+│   ├── loki.yml              # Loki server config
+│   ├── promtail.yml          # Log scraping config
+│   └── grafana/
+│       ├── datasources.yml   # Auto-provision Prometheus + Loki datasources
+│       └── dashboards.yml    # Auto-provision dashboards from dashboards/
+├── dashboards/               # Grafana dashboard JSON files
+├── rules/
+│   └── agent-alerts.yml      # Prometheus alerting rules
+├── scripts/
+│   └── scrape-maestro.sh     # Manual endpoint test script
+├── docker-compose.yml
+├── justfile
+└── pixi.toml
+```
+
+## Key Principles
+
+1. Read-only access to the rest of the HomericIntelligence ecosystem — no modifications to external services.
+2. All configuration is file-based and version-controlled; no manual Grafana UI changes that are not exported to JSON.
+3. Prometheus scrape interval is 15s globally; do not tighten below 10s without understanding cardinality impact.
+4. Loki retention is 30 days (720h); adjust `retention_period` in `configs/loki.yml` if storage is constrained.
+
+## Development Guidelines
+
+- Edit scrape targets in `configs/prometheus.yml` and run `just reload-prometheus` — no restart required.
+- Add new dashboards as JSON files in `dashboards/` and run `just import-dashboards`.
+- Alert rules in `rules/` also take effect after `just reload-prometheus`.
+- Use `just test-scrape` to verify the `up` metric for all targets before declaring a scrape job healthy.
+
+## Common Commands
+
+```bash
+just start                   # docker compose up -d
+just stop                    # docker compose down
+just status                  # docker compose ps
+just logs <service>          # docker compose logs -f <service>
+just reload-prometheus       # POST /-/reload to Prometheus
+just test-scrape             # Query Prometheus /api/v1/query?query=up
+just import-dashboards       # POST each dashboard JSON to Grafana API
+```

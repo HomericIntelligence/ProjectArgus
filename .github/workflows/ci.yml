@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  validate:
+    name: Validate configs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install yamllint
+        run: pip install yamllint
+
+      - name: Lint all YAML files
+        run: |
+          yamllint -d "{extends: default, rules: {line-length: {max: 120}, truthy: disable}}" \
+            configs/prometheus.yml \
+            configs/loki.yml \
+            configs/promtail.yml \
+            configs/grafana/datasources.yml \
+            configs/grafana/dashboards.yml \
+            rules/agent-alerts.yml \
+            docker-compose.yml
+
+      - name: Validate Grafana dashboard JSON
+        run: |
+          for f in dashboards/*.json; do
+            echo "Validating $f ..."
+            python3 - "$f" <<'EOF'
+          import json, sys
+          with open(sys.argv[1]) as fh:
+              d = json.load(fh)
+          required = {"title", "uid", "panels"}
+          missing = required - d.keys()
+          if missing:
+              print(f"ERROR: {sys.argv[1]} missing fields: {missing}", file=sys.stderr)
+              sys.exit(1)
+          print(f"  OK: uid={d['uid']!r}, title={d['title']!r}, panels={len(d['panels'])}")
+          EOF
+          done
+
+      - name: Check docker-compose config
+        run: docker compose config --quiet

@@ -1,0 +1,30 @@
+groups:
+  - name: agent_health
+    rules:
+      - alert: AgentDown
+        expr: absent(maestro_agents_total) or (time() - maestro_last_scrape_timestamp > 300)
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "AI Maestro agent health data missing"
+          description: >
+            No health data has been received from ai-maestro for more than 5 minutes.
+            Check that ai-maestro is running and reachable at the configured scrape target.
+
+      - alert: HighTaskFailureRate
+        expr: >
+          (
+            rate(maestro_tasks_failed_total[10m])
+            /
+            (rate(maestro_tasks_completed_total[10m]) + rate(maestro_tasks_failed_total[10m]) + 1e-9)
+          ) > 0.20
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Task failure rate is above 20%"
+          description: >
+            The ratio of failed tasks to total finished tasks has exceeded 20% over the
+            last 10 minutes. Current value: {{ $value | humanizePercentage }}.
+            Investigate ai-maestro logs for task errors.
