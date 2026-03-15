@@ -9,32 +9,32 @@ clients:
   - url: http://loki:3100/loki/api/v1/push
 
 scrape_configs:
-  # Tail Docker container log files on WSL2 (json-file driver)
-  - job_name: containers
+  # Tail syslog for host-level events (available in WSL2)
+  - job_name: syslog
     static_configs:
       - targets:
           - localhost
         labels:
-          job: containers
-          __path__: /var/lib/docker/containers/*/*-json.log
+          job: syslog
+          host: hermes
+          __path__: /var/log/syslog
 
-    pipeline_stages:
-      - json:
-          expressions:
-            output: log
-            stream: stream
-            attrs:
-      - json:
-          source: attrs
-          expressions:
-            tag:
-      - regex:
-          # Extract container name from the log file path:
-          # /var/lib/docker/containers/<id>/<id>-json.log
-          source: filename
-          expression: '/var/lib/docker/containers/(?P<container_id>[^/]+)/[^/]+-json\.log'
-      - labels:
-          stream:
-          container_id:
-      - output:
-          source: output
+  # Tail Hermes application log
+  - job_name: hermes
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: hermes
+          service: project-hermes
+          __path__: /tmp/hermes.log
+
+  # Tail NATS server log
+  - job_name: nats
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: nats
+          service: nats-server
+          __path__: /home/mvillmow/.local/share/nats/nats.log
