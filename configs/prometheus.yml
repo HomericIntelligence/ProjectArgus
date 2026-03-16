@@ -6,24 +6,13 @@ rule_files:
   - /etc/prometheus/rules/*.yml
 
 scrape_configs:
-  - job_name: 'ai-maestro'
+  # Custom exporter: converts ai-maestro + NATS JSON APIs to Prometheus format
+  # Runs as argus-exporter sidecar on port 9100
+  - job_name: 'homeric-exporter'
     static_configs:
-      - targets: ['172.20.0.1:23000']
-    metrics_path: '/api/diagnostics'
+      - targets: ['argus-exporter:9100']
 
-  - job_name: 'ai-maestro-agents'
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
     static_configs:
-      - targets: ['172.20.0.1:23000']
-    metrics_path: '/api/agents/health'
-
-  - job_name: 'nats'
-    static_configs:
-      - targets: ['localhost:8222']
-    metrics_path: '/metrics'
-
-  - job_name: 'nomad'
-    static_configs:
-      - targets: ['localhost:4646']
-    metrics_path: '/v1/metrics'
-    params:
-      format: ['prometheus']
+      - targets: ['localhost:9090']

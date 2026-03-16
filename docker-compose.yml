@@ -68,6 +68,21 @@ services:
       - prometheus
       - loki
 
+  argus-exporter:
+    image: python:3.11-slim
+    container_name: argus-exporter
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    volumes:
+      - ./exporter/exporter.py:/exporter.py:ro
+    command: python /exporter.py
+    environment:
+      MAESTRO_URL: "http://172.20.0.1:23000"
+      NATS_URL: "http://172.24.0.1:8222"
+    networks:
+      - argus
+
 volumes:
   prometheus_data:
   loki_data:
