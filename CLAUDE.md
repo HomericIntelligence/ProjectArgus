@@ -2,9 +2,9 @@
 
 ## Project Overview
 
-ProjectArgus is the observability stack for the HomericIntelligence ecosystem. It collects metrics from ai-maestro, NATS, Nomad, and all running containers, aggregates logs via Promtail → Loki, and exposes everything through Grafana dashboards.
+ProjectArgus is the observability stack for the HomericIntelligence ecosystem. It collects metrics from ProjectAgamemnon, ProjectNestor, NATS, Nomad, and all running containers, aggregates logs via Promtail → Loki, and exposes everything through Grafana dashboards.
 
-**Important**: ProjectArgus only reads from other services via HTTP scrapes and log tailing. It does NOT modify ai-maestro or any other HomericIntelligence service.
+**Important**: ProjectArgus only reads from other services via HTTP scrapes and log tailing. It does NOT modify Agamemnon or any other HomericIntelligence service.
 
 ## Stack Components
 
@@ -19,20 +19,20 @@ All services run on the `argus` Docker network and are managed via `docker-compo
 
 ## Scrape Targets
 
-| Job               | Host              | Path                  | What it provides              |
-|-------------------|-------------------|-----------------------|-------------------------------|
-| ai-maestro        | 172.20.0.1:23000  | /api/diagnostics      | System-level health metrics   |
-| ai-maestro-agents | 172.20.0.1:23000  | /api/agents/health    | Per-agent health and status   |
-| nats              | localhost:8222    | /metrics              | Message rates, stream storage |
-| nomad             | localhost:4646    | /v1/metrics           | Job and allocation metrics    |
+| Job              | Host              | Path            | What it provides              |
+|------------------|-------------------|-----------------|-------------------------------|
+| agamemnon        | 172.20.0.1:8080   | /v1/agents      | Agent health via exporter     |
+| nestor           | 172.20.0.1:8081   | /v1/health      | Nestor health via exporter    |
+| nats             | localhost:8222    | /metrics        | Message rates, stream storage |
+| nomad            | localhost:4646    | /v1/metrics     | Job and allocation metrics    |
 
 `172.20.0.1` is the WSL2 host gateway — this reaches services running on the Windows host or in other WSL distros.
 
 ## Dashboard Descriptions
 
-- **agent-health.json** (`uid: agent-health`): Total agent count, active vs. hibernated agents, per-agent uptime. Stat and timeseries panels backed by Prometheus.
+- **agent-health.json** (`uid: agent-health`): Total agent count (`hi_agents_total`), online vs. offline agents (`hi_agents_online`, `hi_agents_offline`), Agamemnon health status. Stat and timeseries panels backed by Prometheus.
 - **nats-events.json** (`uid: nats-events`): NATS message throughput, JetStream storage used, distinct subject counts.
-- **task-throughput.json** (`uid: task-throughput`): Tasks created/completed/failed per hour; Keystone dispatch latency histogram.
+- **task-throughput.json** (`uid: task-throughput`): Tasks by status (`hi_tasks_by_status`), completed/failed counts per hour.
 
 ## Repository Structure
 
@@ -49,7 +49,7 @@ ProjectArgus/
 ├── rules/
 │   └── agent-alerts.yml      # Prometheus alerting rules
 ├── scripts/
-│   └── scrape-maestro.sh     # Manual endpoint test script
+│   └── scrape-agamemnon.sh   # Manual endpoint test script
 ├── docker-compose.yml
 ├── justfile
 └── pixi.toml
@@ -79,4 +79,5 @@ just logs <service>          # docker compose logs -f <service>
 just reload-prometheus       # POST /-/reload to Prometheus
 just test-scrape             # Query Prometheus /api/v1/query?query=up
 just import-dashboards       # POST each dashboard JSON to Grafana API
+just scrape-agamemnon        # Manually test Agamemnon and Nestor health endpoints
 ```

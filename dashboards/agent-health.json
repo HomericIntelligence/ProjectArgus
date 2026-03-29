@@ -1,9 +1,9 @@
 {
-  "title": "AI Maestro - Agent Health",
+  "title": "HomericIntelligence - Agent Health",
   "uid": "agent-health",
   "version": 1,
   "schemaVersion": 38,
-  "tags": ["ai-maestro", "agents"],
+  "tags": ["homeric", "agents"],
   "timezone": "browser",
   "refresh": "30s",
   "time": { "from": "now-1h", "to": "now" },
@@ -16,7 +16,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "maestro_agents_total",
+          "expr": "hi_agents_total",
           "legendFormat": "Total",
           "refId": "A"
         }
@@ -36,7 +36,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "maestro_agents_active",
+          "expr": "hi_agents_online",
           "legendFormat": "Active",
           "refId": "A"
         }
@@ -55,14 +55,14 @@
     },
     {
       "id": 3,
-      "title": "Hibernated Agents",
+      "title": "Offline Agents",
       "type": "stat",
       "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "maestro_agents_hibernated",
-          "legendFormat": "Hibernated",
+          "expr": "hi_agents_offline",
+          "legendFormat": "Offline",
           "refId": "A"
         }
       ],
@@ -80,14 +80,14 @@
     },
     {
       "id": 4,
-      "title": "Agent Uptime (seconds)",
+      "title": "Agamemnon Health",
       "type": "stat",
       "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "maestro_uptime_seconds",
-          "legendFormat": "Uptime",
+          "expr": "hi_agamemnon_health",
+          "legendFormat": "Health",
           "refId": "A"
         }
       ],
@@ -96,9 +96,6 @@
         "orientation": "auto",
         "textMode": "auto",
         "colorMode": "value"
-      },
-      "fieldConfig": {
-        "defaults": { "unit": "s" }
       }
     },
     {
@@ -109,18 +106,18 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "maestro_agents_total",
+          "expr": "hi_agents_total",
           "legendFormat": "Total",
           "refId": "A"
         },
         {
-          "expr": "maestro_agents_active",
-          "legendFormat": "Active",
+          "expr": "hi_agents_online",
+          "legendFormat": "Online",
           "refId": "B"
         },
         {
-          "expr": "maestro_agents_hibernated",
-          "legendFormat": "Hibernated",
+          "expr": "hi_agents_offline",
+          "legendFormat": "Offline",
           "refId": "C"
         }
       ],

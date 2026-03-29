@@ -78,7 +78,8 @@ services:
       - ./exporter/exporter.py:/exporter.py:ro
     command: python /exporter.py
     environment:
-      MAESTRO_URL: "http://172.20.0.1:23000"
+      AGAMEMNON_URL: "http://172.20.0.1:8080"
+      NESTOR_URL: "http://172.20.0.1:8081"
       NATS_URL: "http://172.24.0.1:8222"
     networks:
       - argus
