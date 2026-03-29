@@ -1,30 +1,43 @@
 groups:
-  - name: agent_health
+  - name: homeric_health
     rules:
-      - alert: AgentDown
-        expr: absent(maestro_agents_total) or (time() - maestro_last_scrape_timestamp > 300)
+      - alert: AgamemnonDown
+        expr: hi_agamemnon_health == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Agamemnon is unreachable"
+          description: "ProjectAgamemnon /v1/health has been unreachable for 2 minutes."
+
+      - alert: NestorDown
+        expr: hi_nestor_health == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Nestor is unreachable"
+          description: "ProjectNestor /v1/health has been unreachable for 2 minutes."
+
+      - alert: ExporterScrapeStale
+        expr: time() - homeric_exporter_scrape_timestamp > 300
         for: 5m
         labels:
           severity: critical
         annotations:
-          summary: "AI Maestro agent health data missing"
-          description: >
-            No health data has been received from ai-maestro for more than 5 minutes.
-            Check that ai-maestro is running and reachable at the configured scrape target.
+          summary: "Homeric exporter scrape is stale"
+          description: "No scrape has completed in more than 5 minutes."
 
       - alert: HighTaskFailureRate
         expr: >
           (
-            rate(maestro_tasks_failed_total[10m])
+            hi_tasks_by_status{status="failed"}
             /
-            (rate(maestro_tasks_completed_total[10m]) + rate(maestro_tasks_failed_total[10m]) + 1e-9)
+            (hi_tasks_total + 1e-9)
           ) > 0.20
         for: 10m
         labels:
           severity: warning
         annotations:
-          summary: "Task failure rate is above 20%"
-          description: >
-            The ratio of failed tasks to total finished tasks has exceeded 20% over the
-            last 10 minutes. Current value: {{ $value | humanizePercentage }}.
-            Investigate ai-maestro logs for task errors.
+          summary: "Task failure rate above 20%"
+          description: "More than 20% of tasks are in failed state. Value: {{ $value | humanizePercentage }}."

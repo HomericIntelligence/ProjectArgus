@@ -3,7 +3,7 @@
   "uid": "task-throughput",
   "version": 1,
   "schemaVersion": 38,
-  "tags": ["tasks", "keystone", "pipeline"],
+  "tags": ["tasks", "pipeline"],
   "timezone": "browser",
   "refresh": "30s",
   "time": { "from": "now-3h", "to": "now" },
@@ -16,7 +16,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "increase(maestro_tasks_created_total[1h])",
+          "expr": "increase(hi_tasks_by_status[1h])",
           "legendFormat": "Created",
           "refId": "A"
         }
@@ -34,7 +34,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "increase(maestro_tasks_completed_total[1h])",
+          "expr": "hi_tasks_by_status{status=\"completed\"}",
           "legendFormat": "Completed",
           "refId": "A"
         }
@@ -57,7 +57,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "increase(maestro_tasks_failed_total[1h])",
+          "expr": "hi_tasks_by_status{status=\"failed\"}",
           "legendFormat": "Failed",
           "refId": "A"
         }
@@ -73,27 +73,6 @@
       }
     },
     {
-      "id": 4,
-      "title": "Keystone Dispatch p99 Latency",
-      "type": "stat",
-      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [
-        {
-          "expr": "histogram_quantile(0.99, rate(maestro_keystone_dispatch_duration_seconds_bucket[5m]))",
-          "legendFormat": "p99 latency",
-          "refId": "A"
-        }
-      ],
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"] },
-        "colorMode": "value"
-      },
-      "fieldConfig": {
-        "defaults": { "unit": "s" }
-      }
-    },
-    {
       "id": 5,
       "title": "Task Rate Over Time",
       "type": "timeseries",
@@ -101,50 +80,23 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "rate(maestro_tasks_created_total[5m])",
-          "legendFormat": "Created/s",
+          "expr": "increase(hi_tasks_by_status[1h])",
+          "legendFormat": "Total/hr",
           "refId": "A"
         },
         {
-          "expr": "rate(maestro_tasks_completed_total[5m])",
-          "legendFormat": "Completed/s",
+          "expr": "hi_tasks_by_status{status=\"completed\"}",
+          "legendFormat": "Completed",
           "refId": "B"
         },
         {
-          "expr": "rate(maestro_tasks_failed_total[5m])",
-          "legendFormat": "Failed/s",
+          "expr": "hi_tasks_by_status{status=\"failed\"}",
+          "legendFormat": "Failed",
           "refId": "C"
         }
       ],
       "fieldConfig": {
         "defaults": { "unit": "ops" }
-      }
-    },
-    {
-      "id": 6,
-      "title": "Keystone Dispatch Latency Percentiles",
-      "type": "timeseries",
-      "gridPos": { "x": 0, "y": 12, "w": 24, "h": 8 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [
-        {
-          "expr": "histogram_quantile(0.50, rate(maestro_keystone_dispatch_duration_seconds_bucket[5m]))",
-          "legendFormat": "p50",
-          "refId": "A"
-        },
-        {
-          "expr": "histogram_quantile(0.95, rate(maestro_keystone_dispatch_duration_seconds_bucket[5m]))",
-          "legendFormat": "p95",
-          "refId": "B"
-        },
-        {
-          "expr": "histogram_quantile(0.99, rate(maestro_keystone_dispatch_duration_seconds_bucket[5m]))",
-          "legendFormat": "p99",
-          "refId": "C"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": { "unit": "s" }
       }
     }
   ]

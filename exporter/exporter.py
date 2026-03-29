@@ -1,23 +1,24 @@
 #!/usr/bin/env python3
 """
-homeric-exporter — Converts ai-maestro and NATS JSON APIs to Prometheus metrics.
+homeric-exporter — Converts Agamemnon, Nestor, and NATS JSON APIs to Prometheus metrics.
 Runs as a sidecar in the argus stack, exposes /metrics on port 9100.
 """
 from __future__ import annotations
 
+import json
+import logging
 import os
 import time
 import urllib.request
-import json
-import logging
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("homeric-exporter")
 
-MAESTRO_URL = os.environ.get("MAESTRO_URL", "http://172.20.0.1:23000")
-NATS_URL    = os.environ.get("NATS_URL",    "http://172.24.0.1:8222")
-PORT        = int(os.environ.get("EXPORTER_PORT", "9100"))
+AGAMEMNON_URL = os.environ.get("AGAMEMNON_URL", "http://172.20.0.1:8080")
+NESTOR_URL    = os.environ.get("NESTOR_URL",    "http://172.20.0.1:8081")
+NATS_URL      = os.environ.get("NATS_URL",      "http://172.24.0.1:8222")
+PORT          = int(os.environ.get("EXPORTER_PORT", "9100"))
 
 
 def _fetch(url: str) -> dict | None:
@@ -29,6 +30,15 @@ def _fetch(url: str) -> dict | None:
         return None
 
 
+def _health_check(url: str) -> int:
+    """Return 1 if the URL returns HTTP 200, 0 otherwise."""
+    try:
+        r = urllib.request.urlopen(url, timeout=5)
+        return 1 if r.status == 200 else 0
+    except Exception:
+        return 0
+
+
 def collect() -> str:
     lines: list[str] = []
 
@@ -37,64 +47,56 @@ def collect() -> str:
         lines.append(f"# TYPE {name} gauge")
         lines.append(f"{name}{{{lstr}}} {value}")
 
-    # ── ai-maestro agents ──────────────────────────────────────────────────
-    d = _fetch(f"{MAESTRO_URL}/api/agents/unified")
-    if d:
-        stats = d.get("stats", {})
-        gauge("maestro_agents_total",      stats.get("total", 0))
-        gauge("maestro_agents_online",     stats.get("online", 0))
-        gauge("maestro_agents_offline",    stats.get("offline", 0))
-        gauge("maestro_agents_orphans",    stats.get("orphans", 0))
-        gauge("maestro_hosts_total",       d.get("totalHosts", 0))
-        gauge("maestro_hosts_successful",  d.get("successfulHosts", 0))
-        for entry in d.get("agents", []):
-            ag = entry["agent"]
-            online = 1 if ag.get("session", {}).get("status") == "online" else 0
-            gauge("maestro_agent_online", online, {
-                "name": ag["name"],
-                "host": ag.get("hostId", "unknown"),
-                "program": ag.get("program", "unknown"),
-            })
+    # ── Agamemnon health ───────────────────────────────────────────────────
+    gauge("hi_agamemnon_health", _health_check(f"{AGAMEMNON_URL}/v1/health"))
 
-    # ── ai-maestro diagnostics ─────────────────────────────────────────────
-    d = _fetch(f"{MAESTRO_URL}/api/diagnostics")
+    # ── Agamemnon agents ───────────────────────────────────────────────────
+    d = _fetch(f"{AGAMEMNON_URL}/v1/agents")
     if d:
-        summary = d.get("summary", {})
-        gauge("maestro_diagnostics_total",   summary.get("total", 0))
-        gauge("maestro_diagnostics_passed",  summary.get("passed", 0))
-        gauge("maestro_diagnostics_failed",  summary.get("failed", 0))
-        gauge("maestro_diagnostics_ok",      1 if summary.get("status") == "pass" else 0)
-        for check in d.get("checks", []):
-            gauge("maestro_check_ok", 1 if check["status"] == "pass" else 0,
-                  {"check": check["name"]})
+        agents = d.get("agents", [])
+        total   = len(agents)
+        online  = sum(1 for a in agents if a.get("status") == "online")
+        offline = total - online
+        gauge("hi_agents_total",   total)
+        gauge("hi_agents_online",  online)
+        gauge("hi_agents_offline", offline)
+        for ag in agents:
+            gauge("hi_agent_online",
+                  1 if ag.get("status") == "online" else 0,
+                  {"name":    ag.get("name", "unknown"),
+                   "host":    ag.get("host", "unknown"),
+                   "program": ag.get("program", "unknown")})
 
-    # ── ai-maestro teams + tasks ───────────────────────────────────────────
-    d = _fetch(f"{MAESTRO_URL}/api/teams")
+    # ── Agamemnon tasks ────────────────────────────────────────────────────
+    d = _fetch(f"{AGAMEMNON_URL}/v1/tasks")
     if d:
-        teams = d.get("teams", [])
-        gauge("maestro_teams_total", len(teams))
-        total_tasks = 0
+        tasks = d.get("tasks", [])
+        gauge("hi_tasks_total", len(tasks))
         status_counts: dict[str, int] = {}
-        for team in teams:
-            td = _fetch(f"{MAESTRO_URL}/api/teams/{team['id']}/tasks")
-            if td:
-                for task in td.get("tasks", []):
-                    total_tasks += 1
-                    s = task.get("status", "unknown")
-                    status_counts[s] = status_counts.get(s, 0) + 1
-        gauge("maestro_tasks_total", total_tasks)
+        for task in tasks:
+            s = task.get("status", "unknown")
+            status_counts[s] = status_counts.get(s, 0) + 1
         for status, count in status_counts.items():
-            gauge("maestro_tasks_by_status", count, {"status": status})
+            gauge("hi_tasks_by_status", count, {"status": status})
+
+    # ── Nestor health + research stats ────────────────────────────────────
+    gauge("hi_nestor_health", _health_check(f"{NESTOR_URL}/v1/health"))
+
+    d = _fetch(f"{NESTOR_URL}/v1/research/stats")
+    if d:
+        gauge("hi_nestor_research_active",    d.get("active", 0))
+        gauge("hi_nestor_research_completed", d.get("completed", 0))
+        gauge("hi_nestor_research_pending",   d.get("pending", 0))
 
     # ── NATS ───────────────────────────────────────────────────────────────
     d = _fetch(f"{NATS_URL}/varz")
     if d:
-        gauge("nats_connections",     d.get("connections", 0))
-        gauge("nats_in_msgs_total",   d.get("in_msgs", 0))
-        gauge("nats_out_msgs_total",  d.get("out_msgs", 0))
-        gauge("nats_in_bytes_total",  d.get("in_bytes", 0))
-        gauge("nats_out_bytes_total", d.get("out_bytes", 0))
-        gauge("nats_slow_consumers",  d.get("slow_consumers", 0))
+        gauge("nats_connections",    d.get("connections", 0))
+        gauge("nats_in_msgs_total",  d.get("in_msgs", 0))
+        gauge("nats_out_msgs_total", d.get("out_msgs", 0))
+        gauge("nats_in_bytes_total", d.get("in_bytes", 0))
+        gauge("nats_out_bytes_total",d.get("out_bytes", 0))
+        gauge("nats_slow_consumers", d.get("slow_consumers", 0))
 
     d = _fetch(f"{NATS_URL}/jsz")
     if d:
@@ -126,12 +128,13 @@ class Handler(BaseHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
 
-    def log_message(self, fmt, *args):  # suppress per-request access log noise
+    def log_message(self, fmt, *args):
         pass
 
 
 if __name__ == "__main__":
     log.info("homeric-exporter starting on port %d", PORT)
-    log.info("Scraping ai-maestro at %s", MAESTRO_URL)
+    log.info("Scraping Agamemnon at %s", AGAMEMNON_URL)
+    log.info("Scraping Nestor at %s", NESTOR_URL)
     log.info("Scraping NATS at %s", NATS_URL)
     HTTPServer(("0.0.0.0", PORT), Handler).serve_forever()
