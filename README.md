@@ -4,7 +4,8 @@ Observability stack for the HomericIntelligence mesh. ProjectArgus provides cent
 
 ## What Gets Monitored
 
-- **ai-maestro**: Agent health (`/api/agents/health`), system diagnostics (`/api/diagnostics`)
+- **ProjectAgamemnon**: Agent health (`/v1/health`), agent list (`/v1/agents`)
+- **ProjectNestor**: Research pipeline health (`/v1/health`)
 - **NATS**: Message rates, JetStream storage, subject counts (port 8222)
 - **Nomad**: Job and allocation metrics (port 4646)
 - **Containers**: All Podman/Docker container logs via Promtail
@@ -28,7 +29,7 @@ Then access Grafana at http://localhost:3000 (default credentials: admin / admin
 
 ## Dashboards
 
-- **AI Maestro - Agent Health**: Agent count, active/hibernated agents, uptime
+- **HomericIntelligence - Agent Health**: Agent count, active/hibernated agents, uptime
 - **NATS Event Bus**: Message rate, JetStream storage, subject counts
 - **Task Throughput**: Tasks created/completed/failed per hour, dispatch latency
 

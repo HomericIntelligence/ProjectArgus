@@ -6,7 +6,7 @@ rule_files:
   - /etc/prometheus/rules/*.yml
 
 scrape_configs:
-  # Custom exporter: converts ai-maestro + NATS JSON APIs to Prometheus format
+  # Custom exporter: converts Agamemnon + NATS + Nestor JSON APIs to Prometheus metrics format
   # Runs as argus-exporter sidecar on port 9100
   - job_name: 'homeric-exporter'
     static_configs:
