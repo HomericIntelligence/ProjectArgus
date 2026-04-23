@@ -26,6 +26,11 @@ services:
       start_period: 10s
     networks:
       - argus
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "0.50"
 
   loki:
     image: grafana/loki:3.1.2
@@ -45,6 +50,11 @@ services:
       start_period: 10s
     networks:
       - argus
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+          cpus: "0.25"
 
   promtail:
     image: grafana/promtail:3.1.2
@@ -64,6 +74,11 @@ services:
       - argus
     depends_on:
       - loki
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+          cpus: "0.10"
 
   grafana:
     image: grafana/grafana:11.2.2
@@ -89,6 +104,11 @@ services:
     depends_on:
       - prometheus
       - loki
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+          cpus: "0.25"
 
   argus-exporter:
     build: ./exporter
@@ -108,6 +128,11 @@ services:
       start_period: 10s
     networks:
       - argus
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+          cpus: "0.10"
 
 volumes:
   prometheus_data:
