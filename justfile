@@ -26,6 +26,24 @@ stop:
 status:
     {{compose_cmd}} ps
 
+# Restart all services (stop then start)
+restart:
+    {{compose_cmd}} down
+    {{compose_cmd}} up -d
+
+# Remove all containers and volumes (destructive — data loss!)
+clean:
+    {{compose_cmd}} down -v
+
+# Validate docker-compose config and YAML files
+validate:
+    {{compose_cmd}} config --quiet
+    @echo "Config is valid."
+
+# Run local test suite
+test:
+    python3 -m pytest tests/ -v 2>/dev/null || python3 -m unittest discover -s tests -v
+
 # Tail logs for a specific service (e.g. just logs prometheus)
 logs SERVICE:
     {{compose_cmd}} logs -f {{SERVICE}}
