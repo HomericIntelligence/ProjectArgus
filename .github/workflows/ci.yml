@@ -50,3 +50,13 @@ jobs:
         run: docker compose config --quiet
         env:
           GF_ADMIN_PASSWORD: ci-validation-only
+
+      - name: Lint exporter Python
+        run: |
+          pip install ruff --quiet
+          ruff check exporter/exporter.py
+
+      - name: Security scan exporter Python
+        run: |
+          pip install bandit --quiet
+          bandit -ll exporter/exporter.py
