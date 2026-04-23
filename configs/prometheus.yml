@@ -7,10 +7,10 @@ rule_files:
 
 scrape_configs:
   # Custom exporter: converts Agamemnon + NATS + Nestor JSON APIs to Prometheus metrics format
-  # Runs as argus-exporter sidecar on port 9100
+  # Runs as argus-exporter sidecar on port 9101
   - job_name: 'homeric-exporter'
     static_configs:
-      - targets: ['argus-exporter:9100']
+      - targets: ['argus-exporter:9101']
 
   # Prometheus self-monitoring
   - job_name: 'prometheus'

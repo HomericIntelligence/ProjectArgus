@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 homeric-exporter — Converts Agamemnon, Nestor, and NATS JSON APIs to Prometheus metrics.
-Runs as a sidecar in the argus stack, exposes /metrics on port 9100.
+Runs as a sidecar in the argus stack, exposes /metrics on port 9101.
 """
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ log = logging.getLogger("homeric-exporter")
 AGAMEMNON_URL = os.environ.get("AGAMEMNON_URL", "http://172.20.0.1:8080")
 NESTOR_URL    = os.environ.get("NESTOR_URL",    "http://172.20.0.1:8081")
 NATS_URL      = os.environ.get("NATS_URL",      "http://172.24.0.1:8222")
-PORT          = int(os.environ.get("EXPORTER_PORT", "9100"))
+PORT          = int(os.environ.get("EXPORTER_PORT", "9101"))
 
 _raw_timeout = os.environ.get("SCRAPE_TIMEOUT", "5")
 try:
