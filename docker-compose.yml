@@ -135,6 +135,16 @@ services:
           memory: 128m
           cpus: "0.10"
 
+  # dev-only: interactive debug shell for exec-based troubleshooting
+  # Start with: docker compose --profile dev up -d debug-shell
+  debug-shell:
+    image: python:3.11.10-slim
+    container_name: argus-debug-shell
+    profiles: [dev]
+    command: sleep infinity
+    networks:
+      - argus
+
 volumes:
   prometheus_data:
   loki_data:
