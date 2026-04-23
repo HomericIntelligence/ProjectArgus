@@ -45,6 +45,16 @@ test-scrape:
 scrape-agamemnon:
     ./scripts/scrape-agamemnon.sh {{AGAMEMNON_URL}}
 
+# === Backup & Restore ===
+
+# Back up Prometheus and Loki data volumes to ./backups/
+backup:
+    ./scripts/backup.sh
+
+# Restore a volume from a backup file: just restore <volume> <file>
+restore VOLUME FILE:
+    ./scripts/restore.sh {{VOLUME}} {{FILE}}
+
 # === Grafana ===
 
 # Import all JSON dashboards from dashboards/ into Grafana via API
