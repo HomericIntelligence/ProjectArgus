@@ -41,3 +41,48 @@ groups:
         annotations:
           summary: "Task failure rate above 20%"
           description: "More than 20% of tasks are in failed state. Value: {{ $value | humanizePercentage }}."
+
+      - alert: ScrapeTargetDown
+        expr: up == 0
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Scrape target is down"
+          description: "Prometheus scrape target {{ $labels.job }} on {{ $labels.instance }} has been unreachable for 3 minutes."
+
+      - alert: HomericExporterDown
+        expr: up{job="homeric-exporter"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Homeric exporter is down"
+          description: "Homeric exporter instance {{ $labels.instance }} has been unreachable for 2 minutes."
+
+      - alert: AllAgentsOffline
+        expr: hi_agents_online == 0 and hi_agents_total > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "All agents are offline"
+          description: "All {{ $value }} agents in the ecosystem are currently offline."
+
+      - alert: NatsConnectionDrop
+        expr: nats_connections == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "NATS connections dropped to zero"
+          description: "NATS broker has zero active connections for 2 minutes. Ecosystem messaging is unavailable."
+
+      - alert: NatsSlowConsumers
+        expr: nats_slow_consumers > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "NATS slow consumers detected"
+          description: "NATS broker detected {{ $value }} slow consumers for 5 minutes. Consumer lag may be increasing."
