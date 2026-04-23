@@ -48,3 +48,5 @@ jobs:
 
       - name: Check docker-compose config
         run: docker compose config --quiet
+        env:
+          GF_ADMIN_PASSWORD: ci-validation-only
