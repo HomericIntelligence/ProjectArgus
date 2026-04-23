@@ -56,6 +56,7 @@ def _health_check(url: str) -> int:
 
 
 def collect() -> str:
+    start = time.time()
     lines: list[str] = []
     emitted_types: set[str] = set()
 
@@ -83,6 +84,13 @@ def collect() -> str:
         nestor_stats     = f_nestor_stats.result()
         nats_varz        = f_nats_varz.result()
         nats_jsz         = f_nats_jsz.result()
+
+    # ── Tally fetch errors per upstream ───────────────────────────────────
+    fetch_errors: dict[str, int] = {
+        "agamemnon": int(agents_data is None) + int(tasks_data is None),
+        "nestor":    int(nestor_stats is None),
+        "nats":      int(nats_varz is None) + int(nats_jsz is None),
+    }
 
     # ── Agamemnon health ───────────────────────────────────────────────────
     gauge("hi_agamemnon_health", agamemnon_health)
@@ -139,6 +147,9 @@ def collect() -> str:
 
     # ── exporter self ──────────────────────────────────────────────────────
     gauge("homeric_exporter_scrape_timestamp", time.time())
+    gauge("homeric_exporter_scrape_duration_seconds", time.time() - start)
+    for upstream, count in fetch_errors.items():
+        gauge("homeric_exporter_fetch_errors_total", count, {"upstream": upstream})
 
     return "\n".join(lines) + "\n"
 
