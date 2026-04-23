@@ -41,10 +41,13 @@ def _health_check(url: str) -> int:
 
 def collect() -> str:
     lines: list[str] = []
+    emitted_types: set[str] = set()
 
     def gauge(name: str, value: float | int, labels: dict | None = None) -> None:
         lstr = ",".join(f'{k}="{v}"' for k, v in (labels or {}).items())
-        lines.append(f"# TYPE {name} gauge")
+        if name not in emitted_types:
+            lines.append(f"# TYPE {name} gauge")
+            emitted_types.add(name)
         lines.append(f"{name}{{{lstr}}} {value}")
 
     # ── Agamemnon health ───────────────────────────────────────────────────
