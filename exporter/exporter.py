@@ -12,6 +12,7 @@ import signal
 import threading
 import time
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -65,13 +66,30 @@ def collect() -> str:
             emitted_types.add(name)
         lines.append(f"{name}{{{lstr}}} {value}")
 
+    # ── Parallelise all independent upstream fetches ──────────────────────
+    with ThreadPoolExecutor(max_workers=7) as pool:
+        f_agamemnon_health = pool.submit(_health_check, f"{AGAMEMNON_URL}/v1/health")
+        f_agents           = pool.submit(_fetch,        f"{AGAMEMNON_URL}/v1/agents")
+        f_tasks            = pool.submit(_fetch,        f"{AGAMEMNON_URL}/v1/tasks")
+        f_nestor_health    = pool.submit(_health_check, f"{NESTOR_URL}/v1/health")
+        f_nestor_stats     = pool.submit(_fetch,        f"{NESTOR_URL}/v1/research/stats")
+        f_nats_varz        = pool.submit(_fetch,        f"{NATS_URL}/varz")
+        f_nats_jsz         = pool.submit(_fetch,        f"{NATS_URL}/jsz")
+        # Resolve all futures before building metric lines
+        agamemnon_health = f_agamemnon_health.result()
+        agents_data      = f_agents.result()
+        tasks_data       = f_tasks.result()
+        nestor_health    = f_nestor_health.result()
+        nestor_stats     = f_nestor_stats.result()
+        nats_varz        = f_nats_varz.result()
+        nats_jsz         = f_nats_jsz.result()
+
     # ── Agamemnon health ───────────────────────────────────────────────────
-    gauge("hi_agamemnon_health", _health_check(f"{AGAMEMNON_URL}/v1/health"))
+    gauge("hi_agamemnon_health", agamemnon_health)
 
     # ── Agamemnon agents ───────────────────────────────────────────────────
-    d = _fetch(f"{AGAMEMNON_URL}/v1/agents")
-    if d:
-        agents = d.get("agents", [])
+    if agents_data:
+        agents = agents_data.get("agents", [])
         total   = len(agents)
         online  = sum(1 for a in agents if a.get("status") == "online")
         offline = total - online
@@ -86,9 +104,8 @@ def collect() -> str:
                    "program": ag.get("program", "unknown")})
 
     # ── Agamemnon tasks ────────────────────────────────────────────────────
-    d = _fetch(f"{AGAMEMNON_URL}/v1/tasks")
-    if d:
-        tasks = d.get("tasks", [])
+    if tasks_data:
+        tasks = tasks_data.get("tasks", [])
         gauge("hi_tasks_total", len(tasks))
         status_counts: dict[str, int] = {}
         for task in tasks:
@@ -98,30 +115,27 @@ def collect() -> str:
             gauge("hi_tasks_by_status", count, {"status": status})
 
     # ── Nestor health + research stats ────────────────────────────────────
-    gauge("hi_nestor_health", _health_check(f"{NESTOR_URL}/v1/health"))
+    gauge("hi_nestor_health", nestor_health)
 
-    d = _fetch(f"{NESTOR_URL}/v1/research/stats")
-    if d:
-        gauge("hi_nestor_research_active",    d.get("active", 0))
-        gauge("hi_nestor_research_completed", d.get("completed", 0))
-        gauge("hi_nestor_research_pending",   d.get("pending", 0))
+    if nestor_stats:
+        gauge("hi_nestor_research_active",    nestor_stats.get("active", 0))
+        gauge("hi_nestor_research_completed", nestor_stats.get("completed", 0))
+        gauge("hi_nestor_research_pending",   nestor_stats.get("pending", 0))
 
     # ── NATS ───────────────────────────────────────────────────────────────
-    d = _fetch(f"{NATS_URL}/varz")
-    if d:
-        gauge("nats_connections",    d.get("connections", 0))
-        gauge("nats_in_msgs_total",  d.get("in_msgs", 0))
-        gauge("nats_out_msgs_total", d.get("out_msgs", 0))
-        gauge("nats_in_bytes_total", d.get("in_bytes", 0))
-        gauge("nats_out_bytes_total",d.get("out_bytes", 0))
-        gauge("nats_slow_consumers", d.get("slow_consumers", 0))
+    if nats_varz:
+        gauge("nats_connections",    nats_varz.get("connections", 0))
+        gauge("nats_in_msgs_total",  nats_varz.get("in_msgs", 0))
+        gauge("nats_out_msgs_total", nats_varz.get("out_msgs", 0))
+        gauge("nats_in_bytes_total", nats_varz.get("in_bytes", 0))
+        gauge("nats_out_bytes_total",nats_varz.get("out_bytes", 0))
+        gauge("nats_slow_consumers", nats_varz.get("slow_consumers", 0))
 
-    d = _fetch(f"{NATS_URL}/jsz")
-    if d:
-        gauge("nats_jetstream_streams",   d.get("streams", 0))
-        gauge("nats_jetstream_consumers", d.get("consumers", 0))
-        gauge("nats_jetstream_messages",  d.get("messages", 0))
-        gauge("nats_jetstream_bytes",     d.get("bytes", 0))
+    if nats_jsz:
+        gauge("nats_jetstream_streams",   nats_jsz.get("streams", 0))
+        gauge("nats_jetstream_consumers", nats_jsz.get("consumers", 0))
+        gauge("nats_jetstream_messages",  nats_jsz.get("messages", 0))
+        gauge("nats_jetstream_bytes",     nats_jsz.get("bytes", 0))
 
     # ── exporter self ──────────────────────────────────────────────────────
     gauge("homeric_exporter_scrape_timestamp", time.time())
