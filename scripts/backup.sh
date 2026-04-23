@@ -22,4 +22,4 @@ done
 echo ""
 echo "Backup complete: $BACKUP_DIR"
 echo "Files:"
-ls -lh "$BACKUP_DIR/${TIMESTAMP:0:8}"* 2>/dev/null || echo "  (no backups found with today's date)"
+ls -lh "${BACKUP_DIR}/${TIMESTAMP:0:8}"* 2>/dev/null || echo "  (no backups found with today's date)"
