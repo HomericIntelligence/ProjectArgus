@@ -43,6 +43,13 @@ cp .env.example .env
 just start
 ```
 
+Key environment variables:
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `GF_ADMIN_PASSWORD` | — | Grafana admin password (required) |
+| `NATS_LOG_DIR` | `/home/mvillmow/.local/share/nats` | Directory containing `nats.log`, mounted read-only into Promtail |
+
 All scrape targets and service configs live in `configs/`. Alert rules are in `rules/`. Grafana dashboards (JSON) are in `dashboards/` and auto-provisioned on startup.
 
 ## Common Commands
