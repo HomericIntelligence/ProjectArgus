@@ -36,8 +36,6 @@ services:
     image: grafana/loki:3.1.2
     container_name: argus-loki
     restart: unless-stopped
-    ports:
-      - "3100:3100"
     volumes:
       - ./configs/loki.yml:/etc/loki/local-config.yaml:ro
       - loki_data:/loki
@@ -55,6 +53,25 @@ services:
         limits:
           memory: 256m
           cpus: "0.25"
+
+  loki-proxy:
+    image: nginx:1.27-alpine
+    container_name: argus-loki-proxy
+    restart: unless-stopped
+    ports:
+      - "3101:80"
+    volumes:
+      - ./configs/nginx/loki.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./configs/nginx/htpasswd:/etc/nginx/htpasswd:ro
+    networks:
+      - argus
+    depends_on:
+      - loki
+    deploy:
+      resources:
+        limits:
+          memory: 64m
+          cpus: "0.10"
 
   promtail:
     image: grafana/promtail:3.1.2
