@@ -13,7 +13,7 @@ import threading
 import time
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer, ThreadingHTTPServer
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("homeric-exporter")
@@ -181,7 +181,7 @@ if __name__ == "__main__":
     log.info("Scraping Nestor at %s", NESTOR_URL)
     log.info("Scraping NATS at %s", NATS_URL)
 
-    server = HTTPServer(("127.0.0.1", PORT), Handler)
+    server = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
 
     def _shutdown(signum, frame):
         sig_name = signal.Signals(signum).name
