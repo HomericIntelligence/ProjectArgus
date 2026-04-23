@@ -8,6 +8,8 @@ from __future__ import annotations
 import json
 import logging
 import os
+import signal
+import threading
 import time
 import urllib.request
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -140,4 +142,17 @@ if __name__ == "__main__":
     log.info("Scraping Agamemnon at %s", AGAMEMNON_URL)
     log.info("Scraping Nestor at %s", NESTOR_URL)
     log.info("Scraping NATS at %s", NATS_URL)
-    HTTPServer(("0.0.0.0", PORT), Handler).serve_forever()
+
+    server = HTTPServer(("0.0.0.0", PORT), Handler)
+
+    def _shutdown(signum, frame):
+        sig_name = signal.Signals(signum).name
+        log.info("received %s — shutting down gracefully", sig_name)
+        t = threading.Thread(target=server.shutdown, daemon=True)
+        t.start()
+
+    signal.signal(signal.SIGTERM, _shutdown)
+    signal.signal(signal.SIGINT, _shutdown)
+
+    server.serve_forever()
+    log.info("homeric-exporter stopped cleanly")
