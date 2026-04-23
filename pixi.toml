@@ -11,6 +11,8 @@ jq = ">=1.6"
 yamllint = ">=1.35"
 ruff = ">=0.4"
 bandit = ">=1.7"
+pytest = ">=8.0"
+python = ">=3.11"
 
 [tasks]
 start  = "just start"
