@@ -19,7 +19,7 @@ scrape_configs:
           host: hermes
           __path__: /var/log/syslog
 
-  # Tail NATS server log — path configurable via NATS_LOG_PATH env var
+  # Tail NATS server log — NATS log directory mounted at /nats-logs
   - job_name: nats
     static_configs:
       - targets:
@@ -27,4 +27,4 @@ scrape_configs:
         labels:
           job: nats
           service: nats-server
-          __path__: ${NATS_LOG_PATH}
+          __path__: /nats-logs/nats.log
