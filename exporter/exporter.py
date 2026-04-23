@@ -22,10 +22,23 @@ NESTOR_URL    = os.environ.get("NESTOR_URL",    "http://172.20.0.1:8081")
 NATS_URL      = os.environ.get("NATS_URL",      "http://172.24.0.1:8222")
 PORT          = int(os.environ.get("EXPORTER_PORT", "9100"))
 
+_raw_timeout = os.environ.get("SCRAPE_TIMEOUT", "5")
+try:
+    SCRAPE_TIMEOUT: float = float(_raw_timeout)
+except ValueError:
+    log.warning("SCRAPE_TIMEOUT=%r is not numeric; falling back to 5", _raw_timeout)
+    SCRAPE_TIMEOUT = 5.0
+
+for _var, _val in (("AGAMEMNON_URL", AGAMEMNON_URL),
+                   ("NESTOR_URL",    NESTOR_URL),
+                   ("NATS_URL",      NATS_URL)):
+    if not _val:
+        log.warning("environment variable %s is empty; scrapes against this target will fail", _var)
+
 
 def _fetch(url: str) -> dict | None:
     try:
-        r = urllib.request.urlopen(url, timeout=5)
+        r = urllib.request.urlopen(url, timeout=SCRAPE_TIMEOUT)
         return json.loads(r.read())
     except Exception as e:
         log.warning("fetch %s failed: %s", url, e)
@@ -35,7 +48,7 @@ def _fetch(url: str) -> dict | None:
 def _health_check(url: str) -> int:
     """Return 1 if the URL returns HTTP 200, 0 otherwise."""
     try:
-        r = urllib.request.urlopen(url, timeout=5)
+        r = urllib.request.urlopen(url, timeout=SCRAPE_TIMEOUT)
         return 1 if r.status == 200 else 0
     except Exception:
         return 0
