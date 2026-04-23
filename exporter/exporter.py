@@ -42,8 +42,8 @@ def _health_check(url: str) -> int:
 def collect() -> str:
     lines: list[str] = []
 
-    def gauge(name: str, value: float | int, labels: dict = {}) -> None:
-        lstr = ",".join(f'{k}="{v}"' for k, v in labels.items())
+    def gauge(name: str, value: float | int, labels: dict | None = None) -> None:
+        lstr = ",".join(f'{k}="{v}"' for k, v in (labels or {}).items())
         lines.append(f"# TYPE {name} gauge")
         lines.append(f"{name}{{{lstr}}} {value}")
 

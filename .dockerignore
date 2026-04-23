@@ -1,0 +1,8 @@
+.git
+.pixi
+.env
+.venv
+.idea
+.vscode
+dashboards/*.bak
+*.md

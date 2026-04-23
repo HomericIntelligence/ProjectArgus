@@ -25,7 +25,7 @@ Observability stack for the HomericIntelligence mesh. ProjectArgus provides cent
 just start
 ```
 
-Then access Grafana at http://localhost:3000 (default credentials: admin / admin).
+Then access Grafana at http://localhost:3000 (credentials: admin / the password set in `.env`).
 
 ## Dashboards
 
@@ -34,6 +34,14 @@ Then access Grafana at http://localhost:3000 (default credentials: admin / admin
 - **Task Throughput**: Tasks created/completed/failed per hour, dispatch latency
 
 ## Configuration
+
+Copy `.env.example` to `.env` and set your values before starting the stack:
+
+```bash
+cp .env.example .env
+# edit .env — at minimum set GF_ADMIN_PASSWORD
+just start
+```
 
 All scrape targets and service configs live in `configs/`. Alert rules are in `rules/`. Grafana dashboards (JSON) are in `dashboards/` and auto-provisioned on startup.
 

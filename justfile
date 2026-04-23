@@ -32,9 +32,9 @@ logs SERVICE:
 
 # === Prometheus ===
 
-# Hot-reload Prometheus configuration (no restart needed)
+# Hot-reload Prometheus configuration via SIGHUP (--web.enable-lifecycle is disabled)
 reload-prometheus:
-    curl -s -X POST http://localhost:9090/-/reload && echo "Prometheus config reloaded."
+    {{compose_cmd}} kill -s HUP prometheus && echo "Prometheus config reloaded."
 
 # Query Prometheus to verify all scrape targets are up
 test-scrape:
