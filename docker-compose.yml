@@ -7,6 +7,11 @@ services:
     image: prom/prometheus:v2.54.1
     container_name: argus-prometheus
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
     ports:
       - "9090:9090"
     volumes:
@@ -36,6 +41,11 @@ services:
     image: grafana/loki:3.1.2
     container_name: argus-loki
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
     volumes:
       - ./configs/loki.yml:/etc/loki/local-config.yaml:ro
       - loki_data:/loki
@@ -77,6 +87,11 @@ services:
     image: grafana/promtail:3.1.2
     container_name: argus-promtail
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
     volumes:
       - ./configs/promtail.yml:/etc/promtail/config.yml:ro
       - /var/log:/var/log:ro
@@ -102,6 +117,11 @@ services:
     image: grafana/grafana:11.2.2
     container_name: argus-grafana
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
     ports:
       - "3000:3000"
     volumes:
@@ -133,6 +153,11 @@ services:
     build: ./exporter
     container_name: argus-exporter
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
     ports:
       - "127.0.0.1:9100:9100"
     environment:
