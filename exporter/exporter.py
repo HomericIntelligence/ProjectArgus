@@ -181,7 +181,7 @@ if __name__ == "__main__":
     log.info("Scraping Nestor at %s", NESTOR_URL)
     log.info("Scraping NATS at %s", NATS_URL)
 
-    server = HTTPServer(("0.0.0.0", PORT), Handler)
+    server = HTTPServer(("127.0.0.1", PORT), Handler)
 
     def _shutdown(signum, frame):
         sig_name = signal.Signals(signum).name

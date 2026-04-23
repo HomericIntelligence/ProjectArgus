@@ -133,7 +133,7 @@ services:
     container_name: argus-exporter
     restart: unless-stopped
     ports:
-      - "9100:9100"
+      - "127.0.0.1:9100:9100"
     environment:
       AGAMEMNON_URL: ${AGAMEMNON_URL:-http://172.20.0.1:8080}
       NESTOR_URL: ${NESTOR_URL:-http://172.20.0.1:8081}
