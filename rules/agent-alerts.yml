@@ -49,7 +49,7 @@ groups:
           severity: critical
         annotations:
           summary: "Scrape target is down"
-          description: "Prometheus scrape target {{ $labels.job }} on {{ $labels.instance }} has been unreachable for 3 minutes."
+          description: "Target {{ $labels.job }} @ {{ $labels.instance }} unreachable for 3m."
 
       - alert: HomericExporterDown
         expr: up{job="homeric-exporter"} == 0
@@ -58,7 +58,7 @@ groups:
           severity: critical
         annotations:
           summary: "Homeric exporter is down"
-          description: "Homeric exporter instance {{ $labels.instance }} has been unreachable for 2 minutes."
+          description: "Exporter {{ $labels.instance }} unreachable for 2 minutes."
 
       - alert: AllAgentsOffline
         expr: hi_agents_online == 0 and hi_agents_total > 0
@@ -76,7 +76,7 @@ groups:
           severity: critical
         annotations:
           summary: "NATS connections dropped to zero"
-          description: "NATS broker has zero active connections for 2 minutes. Ecosystem messaging is unavailable."
+          description: "NATS has zero active connections for 2m. Messaging unavailable."
 
       - alert: NatsSlowConsumers
         expr: nats_slow_consumers > 0
