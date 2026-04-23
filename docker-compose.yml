@@ -91,14 +91,11 @@ services:
       - loki
 
   argus-exporter:
-    image: python:3.11.10-slim
+    build: ./exporter
     container_name: argus-exporter
     restart: unless-stopped
     ports:
       - "9100:9100"
-    volumes:
-      - ./exporter/exporter.py:/exporter.py:ro
-    command: python /exporter.py
     environment:
       AGAMEMNON_URL: ${AGAMEMNON_URL:-http://172.20.0.1:8080}
       NESTOR_URL: ${NESTOR_URL:-http://172.20.0.1:8081}
