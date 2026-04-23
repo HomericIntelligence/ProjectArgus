@@ -77,14 +77,4 @@ restore VOLUME FILE:
 
 # Import all JSON dashboards from dashboards/ into Grafana via API
 import-dashboards:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    for f in dashboards/*.json; do
-        echo "Importing $f ..."
-        payload=$(jq -n --slurpfile dash "$f" '{"dashboard": $dash[0], "overwrite": true, "folderId": 0}')
-        curl -s -u {{GRAFANA_AUTH}} \
-            -H "Content-Type: application/json" \
-            -d "$payload" \
-            "{{GRAFANA_URL}}/api/dashboards/db" | jq '.status'
-    done
-    echo "Dashboard import complete."
+    GRAFANA_PORT={{GRAFANA_PORT}} GRAFANA_ADMIN_PASSWORD=$(echo "{{GRAFANA_AUTH}}" | cut -d: -f2) ./scripts/import-dashboards.sh
