@@ -19,17 +19,7 @@ scrape_configs:
           host: hermes
           __path__: /var/log/syslog
 
-  # Tail Hermes application log
-  - job_name: hermes
-    static_configs:
-      - targets:
-          - localhost
-        labels:
-          job: hermes
-          service: project-hermes
-          __path__: /tmp/hermes.log
-
-  # Tail NATS server log
+  # Tail NATS server log — path configurable via NATS_LOG_PATH env var
   - job_name: nats
     static_configs:
       - targets:
@@ -37,4 +27,4 @@ scrape_configs:
         labels:
           job: nats
           service: nats-server
-          __path__: /home/mvillmow/.local/share/nats/nats.log
+          __path__: ${NATS_LOG_PATH}
