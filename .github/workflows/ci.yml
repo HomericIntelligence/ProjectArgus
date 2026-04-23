@@ -72,3 +72,6 @@ jobs:
               sys.exit(1)
           print("SUCCESS: No HIGH severity security issues found")
           SCAN_CHECK
+
+      - name: Lint shell scripts
+        run: shellcheck --severity=warning scripts/*.sh
