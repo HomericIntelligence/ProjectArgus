@@ -8,6 +8,9 @@ platforms = ["linux-64"]
 [dependencies]
 just = ">=1.13"
 jq = ">=1.6"
+yamllint = ">=1.35"
+ruff = ">=0.4"
+bandit = ">=1.7"
 
 [tasks]
 start  = "just start"

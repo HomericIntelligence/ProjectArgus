@@ -15,12 +15,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install yamllint
-        run: pip install yamllint
+      - name: Install pixi
+        run: curl -fsSL https://pixi.sh/install.sh | bash && echo "$HOME/.pixi/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: pixi install
 
       - name: Lint all YAML files
         run: |
-          yamllint -d "{extends: default, rules: {line-length: {max: 120}, truthy: disable}}" \
+          pixi run yamllint -d "{extends: default, rules: {line-length: {max: 120}, truthy: disable}}" \
             configs/prometheus.yml \
             configs/loki.yml \
             configs/promtail.yml \
@@ -52,14 +55,11 @@ jobs:
           GF_ADMIN_PASSWORD: ci-validation-only
 
       - name: Lint exporter Python
-        run: |
-          pip install ruff --quiet
-          ruff check exporter/exporter.py
+        run: pixi run ruff check exporter/exporter.py
 
       - name: Security scan exporter Python
         run: |
-          pip install bandit --quiet
-          bandit -ll -f json exporter/exporter.py > /tmp/bandit.json || true
+          pixi run bandit -ll -f json exporter/exporter.py > /tmp/bandit.json || true
           python3 << 'SCAN_CHECK'
           import json, sys
           with open('/tmp/bandit.json') as f:
