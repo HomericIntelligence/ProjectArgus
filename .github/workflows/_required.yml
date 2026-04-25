@@ -88,7 +88,7 @@ jobs:
               print(f"\nOK: all {len(images)} image reference(s) have valid format")
           EOF
 
-  security/dependency-scan:
+  security-dependency-scan:
     name: security/dependency-scan
     runs-on: ubuntu-latest
     steps:
@@ -100,7 +100,7 @@ jobs:
           scan-ref: .
           exit-code: 0
 
-  security/secrets-scan:
+  security-secrets-scan:
     name: security/secrets-scan
     runs-on: ubuntu-latest
     steps:
@@ -174,7 +174,7 @@ jobs:
             --schemafile https://json.schemastore.org/github-workflow \
             .github/workflows/*.yml
 
-  deps/version-sync:
+  deps-version-sync:
     name: deps/version-sync
     runs-on: ubuntu-latest
     steps:
