@@ -2,9 +2,13 @@
 
 ## Project Overview
 
-ProjectArgus is the observability stack for the HomericIntelligence ecosystem. It collects metrics from ProjectAgamemnon, ProjectNestor, NATS, Nomad, and all running containers, aggregates logs via Promtail → Loki, and exposes everything through Grafana dashboards.
+ProjectArgus is the observability stack for the HomericIntelligence ecosystem. It
+collects metrics from ProjectAgamemnon, ProjectNestor, NATS, Nomad, and all running
+containers, aggregates logs via Promtail → Loki, and exposes everything through
+Grafana dashboards.
 
-**Important**: ProjectArgus only reads from other services via HTTP scrapes and log tailing. It does NOT modify Agamemnon or any other HomericIntelligence service.
+**Important**: ProjectArgus only reads from other services via HTTP scrapes and log
+tailing. It does NOT modify Agamemnon or any other HomericIntelligence service.
 
 ## Stack Components
 
@@ -30,9 +34,13 @@ All services run on the `argus` Docker network and are managed via `docker-compo
 
 ## Dashboard Descriptions
 
-- **agent-health.json** (`uid: agent-health`): Total agent count (`hi_agents_total`), online vs. offline agents (`hi_agents_online`, `hi_agents_offline`), Agamemnon health status. Stat and timeseries panels backed by Prometheus.
-- **nats-events.json** (`uid: nats-events`): NATS message throughput, JetStream storage used, distinct subject counts.
-- **task-throughput.json** (`uid: task-throughput`): Tasks by status (`hi_tasks_by_status`), completed/failed counts per hour.
+- **agent-health.json** (`uid: agent-health`): Total agent count (`hi_agents_total`),
+  online vs. offline agents (`hi_agents_online`, `hi_agents_offline`), Agamemnon
+  health status. Stat and timeseries panels backed by Prometheus.
+- **nats-events.json** (`uid: nats-events`): NATS message throughput, JetStream
+  storage used, distinct subject counts.
+- **task-throughput.json** (`uid: task-throughput`): Tasks by status
+  (`hi_tasks_by_status`), completed/failed counts per hour.
 
 ## Repository Structure
 

@@ -1,6 +1,6 @@
 # === Variables ===
 
-compose_cmd := if `which podman-compose 2>/dev/null` != "" { "podman-compose" } else { "docker compose" }
+compose_cmd := if `command -v podman-compose 2>/dev/null || true` != "" { "podman-compose" } else { "docker compose" }
 
 AGAMEMNON_URL := "http://172.20.0.1:8080"
 GRAFANA_PORT := "3000"
