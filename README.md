@@ -1,6 +1,8 @@
 # ProjectArgus
 
-Observability stack for the HomericIntelligence mesh. ProjectArgus provides centralized metrics collection, log aggregation, and dashboards for all components of the HomericIntelligence ecosystem.
+Observability stack for the HomericIntelligence mesh. ProjectArgus provides
+centralized metrics collection, log aggregation, and dashboards for all
+components of the HomericIntelligence ecosystem.
 
 ## What Gets Monitored
 
@@ -12,12 +14,12 @@ Observability stack for the HomericIntelligence mesh. ProjectArgus provides cent
 
 ## Stack
 
-| Component  | Role                          | Port |
-|------------|-------------------------------|------|
-| Prometheus | Metrics scraping and storage  | 9090 |
-| Loki       | Log aggregation               | 3100 |
-| Promtail   | Log shipping to Loki          | —    |
-| Grafana    | Dashboards and visualization  | 3000 |
+| Component  | Role                         | Port |
+|------------|------------------------------|------|
+| Prometheus | Metrics scraping and storage | 9090 |
+| Loki       | Log aggregation              | 3100 |
+| Promtail   | Log shipping to Loki         | —    |
+| Grafana    | Dashboards and visualization | 3000 |
 
 ## Quick Start
 
@@ -25,7 +27,7 @@ Observability stack for the HomericIntelligence mesh. ProjectArgus provides cent
 just start
 ```
 
-Then access Grafana at http://localhost:3000 (credentials: admin / the password set in `.env`).
+Then access Grafana at <http://localhost:3000> (credentials: admin / the password set in `.env`).
 
 ## Dashboards
 
@@ -45,12 +47,14 @@ just start
 
 Key environment variables:
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `GF_ADMIN_PASSWORD` | — | Grafana admin password (required) |
-| `NATS_LOG_DIR` | `/home/mvillmow/.local/share/nats` | Directory containing `nats.log`, mounted read-only into Promtail |
+| Variable            | Default                            | Purpose                             |
+|---------------------|------------------------------------|-------------------------------------|
+| `GF_ADMIN_PASSWORD` | —                                  | Grafana admin password (required)   |
+| `NATS_LOG_DIR`      | `/home/mvillmow/.local/share/nats` | Host log dir, mounted into Promtail |
 
-All scrape targets and service configs live in `configs/`. Alert rules are in `rules/`. Grafana dashboards (JSON) are in `dashboards/` and auto-provisioned on startup.
+All scrape targets and service configs live in `configs/`. Alert rules are in
+`rules/`. Grafana dashboards (JSON) are in `dashboards/` and auto-provisioned
+on startup.
 
 ## Common Commands
 

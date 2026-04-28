@@ -9,11 +9,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [0.1.0] - 2026-04-23
 
 ### Added
+
 - Prometheus scrape stack with 15s global interval
 - Loki log aggregation with 30-day retention
 - Promtail log shipping from container stdout and host log files
 - Grafana dashboards: agent-health, nats-events, task-throughput
-- Custom Python exporter (`exporter/exporter.py`) scraping ProjectAgamemnon and NATS HTTP APIs, exposing metrics on port 9101
+- Custom Python exporter (`exporter/exporter.py`) scraping ProjectAgamemnon and
+  NATS HTTP APIs, exposing metrics on port 9101
 - Prometheus alerting rules in `rules/agent-alerts.yml` for agent health
 - Grafana Alertmanager contact point provisioning
 - Docker Compose orchestration with pinned image versions
