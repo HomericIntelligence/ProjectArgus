@@ -1,9 +1,9 @@
 [project]
 name = "project-argus"
-version = "0.1.0"
+version = "0.2.0"
 description = "Observability stack for the HomericIntelligence mesh"
 channels = ["conda-forge"]
-platforms = ["linux-64"]
+platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
 
 [dependencies]
 just = ">=1.13"
@@ -18,3 +18,4 @@ python = ">=3.11"
 start  = "just start"
 stop   = "just stop"
 status = "just status"
+test   = "python -m pytest tests/ -v"
