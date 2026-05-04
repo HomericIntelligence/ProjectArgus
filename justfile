@@ -5,7 +5,8 @@ compose_cmd := if `which podman-compose 2>/dev/null` != "" { "podman-compose" } 
 AGAMEMNON_URL := "http://172.20.0.1:8080"
 GRAFANA_PORT := "3000"
 GRAFANA_URL  := "http://localhost:" + GRAFANA_PORT
-GRAFANA_AUTH := "admin:admin"
+GRAFANA_ADMIN_PASSWORD := env_var_or_default("GRAFANA_ADMIN_PASSWORD", "admin")
+GRAFANA_AUTH := "admin:" + GRAFANA_ADMIN_PASSWORD
 
 # === Default ===
 
