@@ -1,0 +1,11 @@
+title = "ProjectArgus Gitleaks Configuration"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Allow credential-like strings in test fixtures and example files"
+paths = [
+    '''tests/''',
+    '''\.env\.example$''',
+]

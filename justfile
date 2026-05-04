@@ -1,3 +1,5 @@
+set dotenv-load
+
 # === Variables ===
 
 compose_cmd := if `command -v podman-compose 2>/dev/null || true` != "" { "podman-compose" } else { "docker compose" }
@@ -5,7 +7,6 @@ compose_cmd := if `command -v podman-compose 2>/dev/null || true` != "" { "podma
 AGAMEMNON_URL := "http://172.20.0.1:8080"
 GRAFANA_PORT := "3000"
 GRAFANA_URL  := "http://localhost:" + GRAFANA_PORT
-GRAFANA_AUTH := "admin:admin"
 
 # === Default ===
 
@@ -77,4 +78,4 @@ restore VOLUME FILE:
 
 # Import all JSON dashboards from dashboards/ into Grafana via API
 import-dashboards:
-    GRAFANA_PORT={{GRAFANA_PORT}} GRAFANA_ADMIN_PASSWORD=$(echo "{{GRAFANA_AUTH}}" | cut -d: -f2) ./scripts/import-dashboards.sh
+    GRAFANA_PORT={{GRAFANA_PORT}} GRAFANA_ADMIN_PASSWORD="${GF_ADMIN_PASSWORD}" ./scripts/import-dashboards.sh
