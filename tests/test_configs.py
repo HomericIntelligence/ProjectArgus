@@ -152,5 +152,45 @@ class TestGrafanaDashboardsConfig(unittest.TestCase):
                 assert field in provider, f"Provider missing field '{field}': {provider}"
 
 
+class TestAlertmanagerConfig(unittest.TestCase):
+    def setUp(self):
+        self.config = load_yaml(CONFIGS_DIR / "alertmanager.yml")
+
+    def test_parses_without_error(self):
+        assert self.config is not None
+
+    def test_has_global_section(self):
+        assert "global" in self.config
+
+    def test_global_has_resolve_timeout(self):
+        assert "resolve_timeout" in self.config["global"]
+
+    def test_has_route_section(self):
+        assert "route" in self.config
+
+    def test_route_has_receiver(self):
+        assert "receiver" in self.config["route"]
+
+    def test_has_receivers_section(self):
+        assert "receivers" in self.config
+
+    def test_receivers_is_list(self):
+        assert isinstance(self.config["receivers"], list)
+
+    def test_receivers_not_empty(self):
+        assert len(self.config["receivers"]) > 0
+
+    def test_each_receiver_has_name(self):
+        for receiver in self.config["receivers"]:
+            assert "name" in receiver, f"Receiver missing 'name': {receiver}"
+
+    def test_default_receiver_exists(self):
+        default_receiver = self.config["route"]["receiver"]
+        receiver_names = {r["name"] for r in self.config["receivers"]}
+        assert default_receiver in receiver_names, (
+            f"Default receiver '{default_receiver}' not found in receivers list"
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
