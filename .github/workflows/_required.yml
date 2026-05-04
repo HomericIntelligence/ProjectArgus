@@ -299,3 +299,20 @@ jobs:
           else
             echo "OK: no :latest image tags found"
           fi
+
+  atlas-dashboard:
+    name: atlas/dashboard
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: dashboard/go.mod
+          cache-dependency-path: dashboard/go.sum
+      - name: go vet
+        working-directory: dashboard
+        run: go vet ./...
+      - name: go test
+        working-directory: dashboard
+        run: go test ./internal/nats/...

@@ -75,3 +75,25 @@ jobs:
 
       - name: Lint shell scripts
         run: shellcheck --severity=warning scripts/*.sh
+
+  atlas-dashboard:
+    name: Atlas dashboard (Go)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: dashboard/go.mod
+          cache-dependency-path: dashboard/go.sum
+
+      - name: go vet
+        working-directory: dashboard
+        run: go vet ./...
+
+      - name: go test
+        working-directory: dashboard
+        run: go test ./internal/nats/...
