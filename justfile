@@ -3,9 +3,9 @@
 compose_cmd := if `which podman-compose 2>/dev/null` != "" { "podman-compose" } else { "docker compose" }
 
 AGAMEMNON_URL := "http://172.20.0.1:8080"
-GRAFANA_PORT := "3000"
+GRAFANA_PORT := "3001"
 GRAFANA_URL  := "http://localhost:" + GRAFANA_PORT
-GRAFANA_AUTH := "admin:admin"
+GRAFANA_AUTH := "admin:${GF_ADMIN_PASSWORD:-changeme}"
 
 # === Default ===
 
@@ -34,12 +34,20 @@ logs SERVICE:
 
 # Hot-reload Prometheus configuration (no restart needed)
 reload-prometheus:
-    curl -s -X POST http://localhost:9090/-/reload && echo "Prometheus config reloaded."
+    {{compose_cmd}} exec prometheus wget -qO- http://localhost:9090/-/reload --post-data='' && echo "Prometheus config reloaded."
 
 # Query Prometheus to verify all scrape targets are up
 test-scrape:
     @echo "Querying Prometheus for 'up' metric..."
-    curl -s "http://localhost:9090/api/v1/query?query=up" | jq '.data.result[] | {job: .metric.job, instance: .metric.instance, up: .value[1]}'
+    {{compose_cmd}} exec prometheus wget -qO- "http://localhost:9090/api/v1/query?query=up" | jq '.data.result[] | {job: .metric.job, instance: .metric.instance, up: .value[1]}'
+
+# Debug Prometheus from inside its container (port not exposed to host)
+debug-prometheus:
+    {{compose_cmd}} exec prometheus sh
+
+# Debug Loki from inside its container (port not exposed to host)
+debug-loki:
+    {{compose_cmd}} exec loki sh
 
 # Manually test Agamemnon and Nestor health endpoints
 scrape-agamemnon:
