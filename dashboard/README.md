@@ -61,6 +61,7 @@ GET /events?topics=agent,task&replay=20
 | `log` | `homeric-logs` | `hi.logs.>` |
 
 **Wire format** (per event):
+
 ```
 event: {topic}
 data: {json payload}
@@ -68,6 +69,7 @@ data: {json payload}
 ```
 
 Keepalive comment frames are sent every 15 seconds:
+
 ```
 : heartbeat
 
