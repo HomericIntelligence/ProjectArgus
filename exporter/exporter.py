@@ -41,11 +41,44 @@ def _health_check(url: str) -> int:
 
 def collect() -> str:
     lines: list[str] = []
+    declared: set[str] = set()
 
-    def gauge(name: str, value: float | int, labels: dict = {}) -> None:
+    _HELP: dict[str, str] = {
+        "hi_agamemnon_health":             "1 if Agamemnon /v1/health returns HTTP 200, 0 otherwise",
+        "hi_agents_total":                 "Total number of agents registered with Agamemnon",
+        "hi_agents_online":                "Number of agents currently online",
+        "hi_agents_offline":               "Number of agents currently offline",
+        "hi_agent_online":                 "1 if this specific agent is online, 0 otherwise",
+        "hi_tasks_total":                  "Total number of tasks in Agamemnon",
+        "hi_tasks_by_status":              "Task count broken down by status label",
+        "hi_nestor_health":                "1 if Nestor /v1/health returns HTTP 200, 0 otherwise",
+        "hi_nestor_research_active":       "Number of active Nestor research jobs",
+        "hi_nestor_research_completed":    "Number of completed Nestor research jobs",
+        "hi_nestor_research_pending":      "Number of pending Nestor research jobs",
+        "nats_connections":                "Current number of NATS client connections",
+        "nats_in_msgs_total":              "Total messages received by the NATS server",
+        "nats_out_msgs_total":             "Total messages sent by the NATS server",
+        "nats_in_bytes_total":             "Total bytes received by the NATS server",
+        "nats_out_bytes_total":            "Total bytes sent by the NATS server",
+        "nats_slow_consumers":             "Number of slow consumers on the NATS server",
+        "nats_jetstream_streams":          "Number of JetStream streams",
+        "nats_jetstream_consumers":        "Number of JetStream consumers",
+        "nats_jetstream_messages":         "Total messages stored in JetStream",
+        "nats_jetstream_bytes":            "Total bytes stored in JetStream",
+        "homeric_exporter_scrape_timestamp": "Unix timestamp of the last successful exporter scrape",
+    }
+
+    def gauge(name: str, value: float | int, labels: dict | None = None) -> None:
+        if labels is None:
+            labels = {}
+        if name not in declared:
+            if name in _HELP:
+                lines.append(f"# HELP {name} {_HELP[name]}")
+            lines.append(f"# TYPE {name} gauge")
+            declared.add(name)
         lstr = ",".join(f'{k}="{v}"' for k, v in labels.items())
-        lines.append(f"# TYPE {name} gauge")
-        lines.append(f"{name}{{{lstr}}} {value}")
+        suffix = f"{{{lstr}}}" if lstr else ""
+        lines.append(f"{name}{suffix} {value}")
 
     # ── Agamemnon health ───────────────────────────────────────────────────
     gauge("hi_agamemnon_health", _health_check(f"{AGAMEMNON_URL}/v1/health"))
@@ -128,7 +161,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
 
-    def log_message(self, fmt, *args):
+    def log_message(self, fmt: str, *args: object) -> None:
         pass
 
 

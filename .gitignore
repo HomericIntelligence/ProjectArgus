@@ -1,3 +1,12 @@
 .env
 data/
 *.log
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+.pixi/

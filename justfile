@@ -2,10 +2,10 @@
 
 compose_cmd := if `which podman-compose 2>/dev/null` != "" { "podman-compose" } else { "docker compose" }
 
-AGAMEMNON_URL := "http://172.20.0.1:8080"
-GRAFANA_PORT := "3000"
-GRAFANA_URL  := "http://localhost:" + GRAFANA_PORT
-GRAFANA_AUTH := "admin:admin"
+AGAMEMNON_URL := env_var_or_default("AGAMEMNON_URL", "http://172.20.0.1:8080")
+GRAFANA_PORT  := "3001"
+GRAFANA_URL   := "http://localhost:" + GRAFANA_PORT
+GRAFANA_AUTH  := "admin:" + env_var_or_default("GRAFANA_ADMIN_PASSWORD", "changeme")
 
 # === Default ===
 
