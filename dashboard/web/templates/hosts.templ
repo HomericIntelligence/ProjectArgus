@@ -1,0 +1,13 @@
+package templates
+
+import "github.com/HomericIntelligence/atlas/internal/store"
+
+templ HostsPage(devices []store.HostView) {
+	@Layout("Hosts") {
+		<div class="hosts-grid">
+			for _, d := range devices {
+				@HostCard(d)
+			}
+		</div>
+	}
+}

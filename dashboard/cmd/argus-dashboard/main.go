@@ -6,10 +6,13 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/HomericIntelligence/atlas/internal/config"
 	"github.com/HomericIntelligence/atlas/internal/events"
 	"github.com/HomericIntelligence/atlas/internal/server"
+	"github.com/HomericIntelligence/atlas/internal/store"
+	"github.com/HomericIntelligence/atlas/internal/tailscale"
 	"github.com/HomericIntelligence/atlas/internal/version"
 )
 
@@ -20,11 +23,22 @@ func main() {
 
 	slog.Info("starting atlas", "version", version.Version, "addr", cfg.ListenAddr)
 
+	cache := store.NewCache()
 	bus := events.NewBus(256)
-	srv := server.New(cfg, bus)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
+
+	// Start Tailscale device refresher.
+	tsSrc := tailscale.NewSource(cfg)
+	tsRefresher := tailscale.NewRefresher(tsSrc, cache, 30*time.Second)
+	go tsRefresher.Start(ctx)
+
+	// Start probe runner.
+	prober := store.NewProber(cache, 10*time.Second)
+	go prober.Start(ctx)
+
+	srv := server.New(cfg, bus, cache)
 
 	if err := srv.Run(ctx); err != nil {
 		slog.Error("server error", "err", err)
