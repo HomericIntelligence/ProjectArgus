@@ -1,0 +1,31 @@
+package templates
+
+templ Layout(title string) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="utf-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<title>{ title } — HomericIntelligence</title>
+			<link rel="stylesheet" href="/static/css/atlas.css"/>
+			<script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+			<script src="/static/js/atlas.js" defer></script>
+		</head>
+		<body>
+			<nav>
+				<span class="brand">Atlas</span>
+				<a href="/">Overview</a>
+				<a href="/hosts">Hosts</a>
+				<a href="/agents">Agents</a>
+				<a href="/tasks">Tasks</a>
+				<a href="/nats">NATS</a>
+				<a href="/grafana">Grafana</a>
+				<a href="/mnemosyne">Mnemosyne</a>
+				<span class="conn-dot" title="SSE disconnected"></span>
+			</nav>
+			<main>
+				{ children... }
+			</main>
+		</body>
+	</html>
+}
