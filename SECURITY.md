@@ -8,11 +8,15 @@ We take security seriously. If you discover a security vulnerability, please rep
 
 ## How to Report
 
-### Email (Preferred)
+### GitHub Private Vulnerability Reporting (Preferred)
 
-Send an email to: **<4211002+mvillmow@users.noreply.github.com>**
+Use [GitHub's private vulnerability reporting](../../security/advisories/new) to
+submit a vulnerability report directly on this repository. This is the preferred
+channel — reports are private, tracked, and linked to the repository.
 
-Or use the GitHub private vulnerability reporting feature if available.
+### Email (Fallback)
+
+Send an email to: **<villmow.products@gmail.com>**
 
 ### What to Include
 
@@ -124,7 +128,7 @@ When contributing to ProjectArgus:
 For security-related questions that are not vulnerability reports:
 
 - Open a GitHub Discussion with the "security" tag
-- Email: <4211002+mvillmow@users.noreply.github.com>
+- Email: <villmow.products@gmail.com>
 
 ---
 
