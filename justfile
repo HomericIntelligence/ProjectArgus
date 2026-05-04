@@ -78,3 +78,13 @@ restore VOLUME FILE:
 # Import all JSON dashboards from dashboards/ into Grafana via API
 import-dashboards:
     GRAFANA_PORT={{GRAFANA_PORT}} GRAFANA_ADMIN_PASSWORD=$(echo "{{GRAFANA_AUTH}}" | cut -d: -f2) ./scripts/import-dashboards.sh
+
+# === Versioning ===
+
+# Bump version and promote CHANGELOG (patch|minor|major)
+bump TYPE:
+    bash scripts/bump-version.sh {{TYPE}}
+
+# Preview CHANGELOG entries since last tag without committing
+generate-changelog:
+    bash scripts/generate-changelog.sh
