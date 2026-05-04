@@ -7,6 +7,9 @@ services:
     image: prom/prometheus:v2.54.1
     container_name: argus-prometheus
     restart: unless-stopped
+    user: "65534:65534"
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     logging:
       driver: json-file
       options:
@@ -41,6 +44,9 @@ services:
     image: grafana/loki:3.1.2
     container_name: argus-loki
     restart: unless-stopped
+    user: "10001:10001"
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     logging:
       driver: json-file
       options:
@@ -68,6 +74,9 @@ services:
     image: nginx:1.27-alpine
     container_name: argus-loki-proxy
     restart: unless-stopped
+    user: "101:101"
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     ports:
       - "3101:80"
     volumes:
@@ -87,6 +96,9 @@ services:
     image: grafana/promtail:3.1.2
     container_name: argus-promtail
     restart: unless-stopped
+    user: "65534:65534"
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     logging:
       driver: json-file
       options:
@@ -117,6 +129,9 @@ services:
     image: grafana/grafana:11.2.2
     container_name: argus-grafana
     restart: unless-stopped
+    user: "472:472"
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     logging:
       driver: json-file
       options:
@@ -153,6 +168,9 @@ services:
     build: ./exporter
     container_name: argus-exporter
     restart: unless-stopped
+    user: "1000:1000"
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     logging:
       driver: json-file
       options:
