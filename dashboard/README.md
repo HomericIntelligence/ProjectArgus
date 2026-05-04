@@ -1,6 +1,8 @@
 # Atlas — HomericIntelligence Dashboard
 
-Atlas is the unified observability dashboard for the HomericIntelligence distributed agent mesh. It provides a real-time overview of agents, tasks, NATS streams, and hosts via a lightweight Go/Chi HTTP server with a dark-themed UI built on htmx and SSE.
+Atlas is the unified observability dashboard for the HomericIntelligence distributed agent mesh.
+It provides a real-time overview of agents, tasks, NATS streams, and hosts via a lightweight
+Go/Chi HTTP server with a dark-themed UI built on htmx and SSE.
 
 ## Quick Start
 
