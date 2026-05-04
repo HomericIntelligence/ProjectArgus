@@ -30,7 +30,7 @@ templ HostCard(h store.HostView) {
 }
 
 templ ServiceLink(s catalog.ProbeResult) {
-	<a href={ templ.SafeURL(s.URL) } target="_blank" class={ "svc-link " + okClass(s.OK) }>
+	<a href={ templ.SafeURL(s.URL) } target="_blank" rel="noopener noreferrer" class={ "svc-link " + okClass(s.OK) }>
 		<span class="svc-name">{ s.Name }</span>
 		<span class="svc-port mono">:{ strconv.Itoa(s.Port) }</span>
 		if s.OK {

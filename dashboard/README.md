@@ -33,7 +33,11 @@ All configuration is via environment variables with the `ATLAS_` prefix:
 | `ATLAS_PROMETHEUS_URL` | `http://prometheus:9090` | Prometheus URL |
 | `ATLAS_GRAFANA_URL` | `http://grafana:3000` | Grafana URL |
 | `ATLAS_AUTH_MODE` | `none` | Auth mode (none/basic/bearer) |
-| `ATLAS_TAILSCALE_SOURCE` | `static` | Tailscale source (static/api/socket) |
+| `ATLAS_TAILSCALE_SOURCE` | `static` | Device discovery: `static`, `cli`, `api`, `auto` |
+| `ATLAS_WORKER_HOST_IP` | `127.0.0.1` | Static source: IP of worker host |
+| `ATLAS_CONTROL_HOST_IP` | `127.0.0.1` | Static source: IP of control host |
+| `ATLAS_TAILSCALE_API_KEY` | `` | API source: Tailscale API key |
+| `ATLAS_TAILNET_NAME` | `` | API source: Tailnet name (e.g. `example.com`) |
 | `ATLAS_POLL_AGAMEMNON_MS` | `5000` | Poll interval for Agamemnon in ms |
 
 ## SSE Event Stream
@@ -74,6 +78,19 @@ Keepalive comment frames are sent every 15 seconds:
 : heartbeat
 
 ```
+
+## HTTP Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/` | Overview page |
+| `GET` | `/hosts` | Tailscale host grid — cards refresh every 5 s via htmx |
+| `GET` | `/healthz` | Liveness probe — returns `ok` |
+| `GET` | `/readyz` | Readiness probe — returns `ok` |
+| `GET` | `/events` | SSE event stream (see below) |
+| `GET` | `/api/hosts` | JSON array of hosts with per-service probe results |
+| `GET` | `/partials/host/{name}` | htmx fragment — single host card (used by 5 s poll) |
+| `GET` | `/static/*` | Static assets (CSS, JS) |
 
 ## Building
 
