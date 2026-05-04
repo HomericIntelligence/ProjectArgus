@@ -99,6 +99,31 @@ class TestPromtailConfig(unittest.TestCase):
     def test_scrape_configs_is_list(self):
         assert isinstance(self.config["scrape_configs"], list)
 
+    def test_syslog_job_host_label_uses_env_var(self):
+        syslog_job = next(
+            (j for j in self.config["scrape_configs"] if j.get("job_name") == "syslog"),
+            None,
+        )
+        assert syslog_job is not None, "syslog scrape job not found"
+        labels = syslog_job["static_configs"][0]["labels"]
+        assert "host" in labels, "syslog job missing 'host' label"
+        assert labels["host"].startswith("${"), (
+            "host label must use env var substitution (${HOSTNAME:-...}), "
+            f"got hardcoded value: {labels['host']!r}"
+        )
+
+    def test_syslog_job_host_label_has_fallback(self):
+        syslog_job = next(
+            (j for j in self.config["scrape_configs"] if j.get("job_name") == "syslog"),
+            None,
+        )
+        assert syslog_job is not None
+        host_val = syslog_job["static_configs"][0]["labels"]["host"]
+        assert ":-" in host_val, (
+            "host label env var should have a fallback default (e.g. ${HOSTNAME:-hermes}), "
+            f"got: {host_val!r}"
+        )
+
 
 class TestGrafanaDatasourcesConfig(unittest.TestCase):
     def setUp(self):
