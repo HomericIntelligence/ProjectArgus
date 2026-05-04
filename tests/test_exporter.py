@@ -232,7 +232,7 @@ class TestCollectMetricNames(unittest.TestCase):
 
     def test_exporter_self_metrics_present(self):
         self.assertIn("homeric_exporter_scrape_duration_seconds", self.output)
-        self.assertIn("homeric_exporter_scrape_timestamp", self.output)
+        self.assertIn("homeric_exporter_scrape_timestamp_seconds", self.output)
         self.assertIn("homeric_exporter_fetch_errors_total", self.output)
 
 

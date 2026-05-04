@@ -146,7 +146,7 @@ def collect() -> str:
         gauge("nats_jetstream_bytes",     nats_jsz.get("bytes", 0))
 
     # ── exporter self ──────────────────────────────────────────────────────
-    gauge("homeric_exporter_scrape_timestamp", time.time())
+    gauge("homeric_exporter_scrape_timestamp_seconds", time.time())
     gauge("homeric_exporter_scrape_duration_seconds", time.time() - start)
     for upstream, count in fetch_errors.items():
         gauge("homeric_exporter_fetch_errors_total", count, {"upstream": upstream})

@@ -20,7 +20,7 @@ groups:
           description: "ProjectNestor /v1/health has been unreachable for 2 minutes."
 
       - alert: ExporterScrapeStale
-        expr: time() - homeric_exporter_scrape_timestamp > 300
+        expr: time() - homeric_exporter_scrape_timestamp_seconds > 300
         for: 5m
         labels:
           severity: critical
