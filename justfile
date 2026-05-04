@@ -78,3 +78,18 @@ restore VOLUME FILE:
 # Import all JSON dashboards from dashboards/ into Grafana via API
 import-dashboards:
     GRAFANA_PORT={{GRAFANA_PORT}} GRAFANA_ADMIN_PASSWORD=$(echo "{{GRAFANA_AUTH}}" | cut -d: -f2) ./scripts/import-dashboards.sh
+
+# === Exporter ===
+
+# Build argus-exporter image locally (tagged argus-exporter:local)
+build-exporter:
+    docker build -t argus-exporter:local ./exporter
+
+# Start the stack using a locally built exporter (offline dev — bypasses registry pull)
+run-exporter-local: build-exporter
+    docker run --rm --network argus \
+        -e AGAMEMNON_URL=${AGAMEMNON_URL} \
+        -e NESTOR_URL=${NESTOR_URL} \
+        -e NATS_URL=${NATS_URL} \
+        -p 127.0.0.1:9100:9100 \
+        argus-exporter:local
