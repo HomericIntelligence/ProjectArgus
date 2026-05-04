@@ -134,6 +134,10 @@ jobs:
   unit-tests:
     name: unit-tests
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    needs: lint
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
       - name: Validate all YAML config files
@@ -151,6 +155,20 @@ jobs:
           fi
           # Validate all YAML files with yamllint (the canonical config-repo unit test)
           find . -path './.git' -prune -o \( -name "*.yml" -o -name "*.yaml" \) -print | xargs yamllint -c .yamllint.yaml
+      - name: Setup pixi
+        uses: prefix-dev/setup-pixi@v0.9.5
+        with:
+          pixi-version: v0.67.2
+          cache: false # cache: true causes HTTP 400 in this environment
+      - name: Run pytest
+        run: pixi run pytest tests/ -v --tb=short --junitxml=junit-unit.xml
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08  # v4.6.0
+        with:
+          name: junit-unit
+          path: junit-unit.xml
+          retention-days: 7
 
   integration-tests:
     name: integration-tests
