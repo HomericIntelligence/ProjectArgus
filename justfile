@@ -2,10 +2,17 @@
 
 compose_cmd := if `which podman-compose 2>/dev/null` != "" { "podman-compose" } else { "docker compose" }
 
-AGAMEMNON_URL := "http://172.20.0.1:8080"
-GRAFANA_PORT := "3000"
-GRAFANA_URL  := "http://localhost:" + GRAFANA_PORT
-GRAFANA_AUTH := "admin:admin"
+# Load .env if present so just commands share the same config as docker-compose.
+# set dotenv-load silently no-ops when .env does not exist.
+set dotenv-load := true
+
+# Defaults mirror docker-compose.yml defaults so the justfile works without a .env.
+AGAMEMNON_URL := env_var_or_default("AGAMEMNON_URL", "http://172.20.0.1:8080")
+GRAFANA_PORT  := env_var_or_default("GRAFANA_PORT", "3001")
+GRAFANA_URL   := "http://localhost:" + GRAFANA_PORT
+_admin_pass   := env_var_or_default("GF_SECURITY_ADMIN_PASSWORD", "admin")
+GRAFANA_AUTH  := "admin:" + _admin_pass
+PROMETHEUS_PORT := env_var_or_default("PROMETHEUS_PORT", "9090")
 
 # === Default ===
 
@@ -34,12 +41,12 @@ logs SERVICE:
 
 # Hot-reload Prometheus configuration (no restart needed)
 reload-prometheus:
-    curl -s -X POST http://localhost:9090/-/reload && echo "Prometheus config reloaded."
+    curl -s -X POST http://localhost:{{PROMETHEUS_PORT}}/-/reload && echo "Prometheus config reloaded."
 
 # Query Prometheus to verify all scrape targets are up
 test-scrape:
     @echo "Querying Prometheus for 'up' metric..."
-    curl -s "http://localhost:9090/api/v1/query?query=up" | jq '.data.result[] | {job: .metric.job, instance: .metric.instance, up: .value[1]}'
+    curl -s "http://localhost:{{PROMETHEUS_PORT}}/api/v1/query?query=up" | jq '.data.result[] | {job: .metric.job, instance: .metric.instance, up: .value[1]}'
 
 # Manually test Agamemnon and Nestor health endpoints
 scrape-agamemnon:

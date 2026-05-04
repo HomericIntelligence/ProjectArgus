@@ -5,10 +5,10 @@ networks:
 services:
   prometheus:
     image: prom/prometheus:latest
-    container_name: argus-prometheus
+    container_name: ${PROMETHEUS_CONTAINER_NAME:-argus-prometheus}
     restart: unless-stopped
     ports:
-      - "9090:9090"
+      - "${PROMETHEUS_PORT:-9090}:9090"
     volumes:
       - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./rules:/etc/prometheus/rules:ro
@@ -24,10 +24,10 @@ services:
 
   loki:
     image: grafana/loki:latest
-    container_name: argus-loki
+    container_name: ${LOKI_CONTAINER_NAME:-argus-loki}
     restart: unless-stopped
     ports:
-      - "3100:3100"
+      - "${LOKI_PORT:-3100}:3100"
     volumes:
       - ./configs/loki.yml:/etc/loki/local-config.yaml:ro
       - loki_data:/loki
@@ -37,7 +37,7 @@ services:
 
   promtail:
     image: grafana/promtail:latest
-    container_name: argus-promtail
+    container_name: ${PROMTAIL_CONTAINER_NAME:-argus-promtail}
     restart: unless-stopped
     volumes:
       - ./configs/promtail.yml:/etc/promtail/config.yml:ro
@@ -51,16 +51,16 @@ services:
 
   grafana:
     image: grafana/grafana:latest
-    container_name: argus-grafana
+    container_name: ${GRAFANA_CONTAINER_NAME:-argus-grafana}
     restart: unless-stopped
     ports:
-      - "3001:3000"
+      - "${GRAFANA_PORT:-3001}:3000"
     volumes:
       - ./dashboards:/var/lib/grafana/dashboards:ro
       - ./configs/grafana:/etc/grafana/provisioning:ro
       - grafana_data:/var/lib/grafana
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:-admin}
       GF_PATHS_PROVISIONING: /etc/grafana/provisioning
     networks:
       - argus
@@ -70,17 +70,17 @@ services:
 
   argus-exporter:
     image: python:3.11-slim
-    container_name: argus-exporter
+    container_name: ${EXPORTER_CONTAINER_NAME:-argus-exporter}
     restart: unless-stopped
     ports:
-      - "9100:9100"
+      - "${EXPORTER_PORT:-9100}:9100"
     volumes:
       - ./exporter/exporter.py:/exporter.py:ro
     command: python /exporter.py
     environment:
-      AGAMEMNON_URL: "http://172.20.0.1:8080"
-      NESTOR_URL: "http://172.20.0.1:8081"
-      NATS_URL: "http://172.24.0.1:8222"
+      AGAMEMNON_URL: "${AGAMEMNON_URL:-http://172.20.0.1:8080}"
+      NESTOR_URL: "${NESTOR_URL:-http://172.20.0.1:8081}"
+      NATS_URL: "${NATS_URL:-http://172.24.0.1:8222}"
     networks:
       - argus
 
