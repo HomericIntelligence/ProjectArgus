@@ -9,20 +9,25 @@ import (
 	"github.com/HomericIntelligence/atlas/internal/config"
 	"github.com/HomericIntelligence/atlas/internal/events"
 	"github.com/HomericIntelligence/atlas/internal/handlers"
+	"github.com/HomericIntelligence/atlas/internal/store"
 )
 
 type Server struct {
-	cfg *config.Config
-	srv *http.Server
-	bus *events.Bus
-	sse *handlers.SSE
+	cfg          *config.Config
+	srv          *http.Server
+	bus          *events.Bus
+	sse          *handlers.SSE
+	apiHandler   *handlers.Hosts
+	hostsHandler *handlers.HostsHandler
 }
 
-func New(cfg *config.Config, bus *events.Bus) *Server {
+func New(cfg *config.Config, bus *events.Bus, cache *store.Cache) *Server {
 	s := &Server{
-		cfg: cfg,
-		bus: bus,
-		sse: handlers.NewSSE(bus),
+		cfg:          cfg,
+		bus:          bus,
+		sse:          handlers.NewSSE(bus),
+		apiHandler:   handlers.NewHosts(cache),
+		hostsHandler: handlers.NewHostsHandler(cache),
 	}
 	s.srv = &http.Server{
 		Addr:         cfg.ListenAddr,

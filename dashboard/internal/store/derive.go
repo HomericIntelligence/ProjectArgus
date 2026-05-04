@@ -13,3 +13,19 @@ func (c *Cache) HostServices(host string) []catalog.ProbeResult {
 	}
 	return out
 }
+
+// BuildHostViews joins devices from the Tailscale cache with probe results
+// to produce a HostView slice suitable for rendering the hosts page.
+func BuildHostViews(c *Cache) []HostView {
+	devices := c.GetDevices()
+	views := make([]HostView, len(devices))
+	for i, d := range devices {
+		views[i] = HostView{
+			Hostname:    d.Hostname,
+			TailscaleIP: d.TailscaleIP,
+			Online:      d.Online,
+			Services:    c.HostServices(d.Hostname),
+		}
+	}
+	return views
+}

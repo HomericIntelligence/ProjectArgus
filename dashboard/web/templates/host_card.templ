@@ -1,0 +1,49 @@
+package templates
+
+import (
+	"fmt"
+	"strconv"
+	"github.com/HomericIntelligence/atlas/internal/catalog"
+	"github.com/HomericIntelligence/atlas/internal/store"
+)
+
+templ HostCard(h store.HostView) {
+	<div class="host-card" id={ "host-" + h.Hostname }
+		hx-get={ "/partials/host/" + h.Hostname }
+		hx-trigger="every 5s"
+		hx-swap="outerHTML">
+		<div class="host-header">
+			<span class="hostname">{ h.Hostname }</span>
+			<span class="ts-ip mono">{ h.TailscaleIP }</span>
+			if h.Online {
+				<span class="badge green">online</span>
+			} else {
+				<span class="badge red">offline</span>
+			}
+		</div>
+		<div class="services-grid">
+			for _, svc := range h.Services {
+				@ServiceLink(svc)
+			}
+		</div>
+	</div>
+}
+
+templ ServiceLink(s catalog.ProbeResult) {
+	<a href={ templ.SafeURL(s.URL) } target="_blank" class={ "svc-link " + okClass(s.OK) }>
+		<span class="svc-name">{ s.Name }</span>
+		<span class="svc-port mono">:{ strconv.Itoa(s.Port) }</span>
+		if s.OK {
+			<span class="badge green">↑ { fmt.Sprintf("%dms", s.LatencyMs) }</span>
+		} else {
+			<span class="badge red">↓</span>
+		}
+	</a>
+}
+
+func okClass(ok bool) string {
+	if ok {
+		return "ok"
+	}
+	return "err"
+}
