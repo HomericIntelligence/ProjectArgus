@@ -32,6 +32,21 @@ All services run on the `argus` Docker network and are managed via `docker-compo
 
 `172.20.0.1` is the WSL2 host gateway — this reaches services running on the Windows host or in other WSL distros.
 
+## Environment Variables
+
+Copy `.env.example` to `.env` at the repository root and set values before running `just start`.
+
+| Variable | Required | Default | Purpose |
+|---|---|---|---|
+| `NATS_LOG_DIR` | No | `~/.local/share/nats` | Host path Promtail mounts read-only for NATS logs |
+| `GF_ADMIN_PASSWORD` | **Yes** | `changeme` | Grafana admin password — change before first run |
+| `AGAMEMNON_URL` | No | `http://172.20.0.1:8080` | Agamemnon API base URL |
+| `NESTOR_URL` | No | `http://172.20.0.1:8081` | Nestor API base URL |
+| `NATS_URL` | No | `http://172.24.0.1:8222` | NATS monitoring API URL |
+
+`NATS_LOG_DIR` is used by the `promtail` service as a read-only bind mount
+(`docker-compose.yml:98`). The full default is `/home/mvillmow/.local/share/nats`.
+
 ## Dashboard Descriptions
 
 - **agent-health.json** (`uid: agent-health`): Total agent count (`hi_agents_total`),
