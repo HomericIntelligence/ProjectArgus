@@ -491,9 +491,9 @@ func TestSSEMultipleTopics(t *testing.T) {
 func TestSSEHeartbeat(t *testing.T) {
 	t.Parallel()
 
-	old := handlers.HeartbeatInterval
-	handlers.HeartbeatInterval = 50 * time.Millisecond
-	t.Cleanup(func() { handlers.HeartbeatInterval = old })
+	old := handlers.HeartbeatInterval()
+	handlers.SetHeartbeatInterval(50 * time.Millisecond)
+	t.Cleanup(func() { handlers.SetHeartbeatInterval(old) })
 
 	_, h := newTestBus(t)
 

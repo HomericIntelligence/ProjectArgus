@@ -5,14 +5,29 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/HomericIntelligence/atlas/internal/events"
 )
 
-// HeartbeatInterval is the interval between SSE heartbeat frames. It defaults
-// to 15 seconds but can be overridden in tests.
-var HeartbeatInterval = 15 * time.Second
+// heartbeatNanos stores the heartbeat interval in nanoseconds.
+// Access via HeartbeatInterval / SetHeartbeatInterval for race safety.
+var heartbeatNanos atomic.Int64
+
+func init() {
+	heartbeatNanos.Store(int64(15 * time.Second))
+}
+
+// HeartbeatInterval returns the current heartbeat interval.
+func HeartbeatInterval() time.Duration {
+	return time.Duration(heartbeatNanos.Load())
+}
+
+// SetHeartbeatInterval sets the heartbeat interval. Safe for concurrent use; intended for tests.
+func SetHeartbeatInterval(d time.Duration) {
+	heartbeatNanos.Store(int64(d))
+}
 
 // SSE is the Server-Sent Events handler. It streams events from the bus to
 // connected HTTP clients using the text/event-stream protocol.
@@ -68,7 +83,7 @@ func (h *SSE) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ch := h.bus.Subscribe(1000)
 	defer h.bus.Unsubscribe(ch)
 
-	ticker := time.NewTicker(HeartbeatInterval)
+	ticker := time.NewTicker(HeartbeatInterval())
 	defer ticker.Stop()
 
 	for {
