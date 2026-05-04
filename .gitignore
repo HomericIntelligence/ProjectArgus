@@ -6,3 +6,7 @@ data/
 .vscode/
 .DS_Store
 *.swp
+.coverage
+htmlcov/
+coverage.xml
+.pytest_cache/
