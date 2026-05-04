@@ -5,6 +5,7 @@ Uses only stdlib: yaml, pathlib, unittest.
 import unittest
 import yaml
 from pathlib import Path
+from typing import Any
 
 REPO_ROOT = Path(__file__).parent.parent
 CONFIGS_DIR = REPO_ROOT / "configs"
@@ -150,6 +151,69 @@ class TestGrafanaDashboardsConfig(unittest.TestCase):
         for provider in self.config["providers"]:
             for field in required_fields:
                 assert field in provider, f"Provider missing field '{field}': {provider}"
+
+
+class TestDockerComposeNetworkIsolation(unittest.TestCase):
+    """Verify that the argus-loki internal network is correctly configured.
+
+    Issue #128: Loki must be isolated to the argus-loki internal network so
+    that arbitrary containers on the argus network cannot reach port 3100.
+    """
+
+    def setUp(self) -> None:
+        self.compose = load_yaml(REPO_ROOT / "docker-compose.yml")
+
+    def _service_networks(self, service_name: str) -> list[str]:
+        nets: Any = self.compose["services"][service_name].get("networks", [])
+        if isinstance(nets, dict):
+            return list(nets.keys())
+        return list(nets)
+
+    def test_argus_loki_network_declared(self) -> None:
+        assert "argus-loki" in self.compose["networks"]
+
+    def test_argus_loki_network_is_internal(self) -> None:
+        assert self.compose["networks"]["argus-loki"].get("internal") is True
+
+    def test_loki_only_on_argus_loki_network(self) -> None:
+        nets = self._service_networks("loki")
+        assert "argus-loki" in nets
+        assert "argus" not in nets, "loki must not be on the argus network (issue #128)"
+
+    def test_loki_proxy_bridges_both_networks(self) -> None:
+        nets = self._service_networks("loki-proxy")
+        assert "argus" in nets
+        assert "argus-loki" in nets
+
+    def test_promtail_only_on_argus_loki_network(self) -> None:
+        nets = self._service_networks("promtail")
+        assert "argus-loki" in nets
+        assert "argus" not in nets, "promtail must not be on the argus network"
+
+    def test_grafana_not_on_argus_loki_network(self) -> None:
+        nets = self._service_networks("grafana")
+        assert "argus" in nets
+        assert "argus-loki" not in nets, "grafana should reach Loki via loki-proxy only"
+
+    def test_debug_shell_not_on_argus_loki_network(self) -> None:
+        nets = self._service_networks("debug-shell")
+        assert "argus-loki" not in nets, "debug-shell must not access the argus-loki network"
+
+    def test_grafana_depends_on_loki_proxy_not_loki(self) -> None:
+        deps: Any = self.compose["services"]["grafana"].get("depends_on", [])
+        if isinstance(deps, dict):
+            dep_names = list(deps.keys())
+        else:
+            dep_names = list(deps)
+        assert "loki-proxy" in dep_names
+        assert "loki" not in dep_names, "grafana should depend on loki-proxy, not loki directly"
+
+    def test_loki_datasource_url_uses_proxy(self) -> None:
+        datasources = load_yaml(CONFIGS_DIR / "grafana" / "datasources.yml")["datasources"]
+        loki_ds = next(ds for ds in datasources if ds["type"] == "loki")
+        assert loki_ds["url"] == "http://loki-proxy", (
+            "Loki datasource must point to loki-proxy, not loki:3100 directly"
+        )
 
 
 if __name__ == "__main__":
