@@ -152,5 +152,39 @@ class TestGrafanaDashboardsConfig(unittest.TestCase):
                 assert field in provider, f"Provider missing field '{field}': {provider}"
 
 
+class TestDockerComposePortBindings(unittest.TestCase):
+    """Assert no service port is bound to 0.0.0.0 (all-interfaces)."""
+
+    ALLOWED_BINDINGS = {"127.0.0.1"}
+
+    def setUp(self) -> None:
+        self.compose = load_yaml(REPO_ROOT / "docker-compose.yml")
+
+    def test_no_wildcard_port_bindings(self) -> None:
+        services = self.compose.get("services", {})
+        for svc_name, svc in services.items():
+            for port_entry in svc.get("ports", []):
+                port_str = str(port_entry)
+                parts = port_str.split(":")
+                if len(parts) == 1:
+                    self.fail(
+                        f"Service '{svc_name}' has bare port binding '{port_str}' "
+                        f"(implicit 0.0.0.0). Use '127.0.0.1:{port_str}:{port_str}' instead."
+                    )
+                elif len(parts) == 2:
+                    self.fail(
+                        f"Service '{svc_name}' binds port '{port_str}' on 0.0.0.0. "
+                        f"Use '127.0.0.1:{parts[0]}:{parts[1]}' instead."
+                    )
+                else:
+                    bind_ip = parts[0]
+                    self.assertIn(
+                        bind_ip,
+                        self.ALLOWED_BINDINGS,
+                        f"Service '{svc_name}' port '{port_str}' binds to '{bind_ip}', "
+                        f"not in allowed set {self.ALLOWED_BINDINGS}.",
+                    )
+
+
 if __name__ == "__main__":
     unittest.main()
