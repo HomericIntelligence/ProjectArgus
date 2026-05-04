@@ -78,3 +78,14 @@ restore VOLUME FILE:
 # Import all JSON dashboards from dashboards/ into Grafana via API
 import-dashboards:
     GRAFANA_PORT={{GRAFANA_PORT}} GRAFANA_ADMIN_PASSWORD=$(echo "{{GRAFANA_AUTH}}" | cut -d: -f2) ./scripts/import-dashboards.sh
+
+# === Alertmanager ===
+
+# Check Alertmanager health endpoint
+check-alertmanager:
+    @echo "Checking Alertmanager health..."
+    wget -qO- http://localhost:9093/-/healthy && echo "Alertmanager is healthy."
+
+# Hot-reload Alertmanager configuration
+reload-alertmanager:
+    curl -s -X POST http://localhost:9093/-/reload && echo "Alertmanager config reloaded."
