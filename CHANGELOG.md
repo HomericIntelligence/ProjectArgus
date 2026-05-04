@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Atlas service (M1–M3): Go module with Chi server, hello-world page, SSE endpoint,
+  NATS/JetStream subscribers, Tailscale sources, service probe matrix, and hosts page
+- `.dockerignore` to minimise Docker build context
+
+### Changed
+
+- CI lint job consolidates typecheck steps; unified required-checks workflow added
+- Python base image bumped to `3.14.0-slim`
+
+### Fixed
+
+- Atlas SSE heartbeat data race in tests
+- Atlas M2 review-wave findings (healthz plaintext, hermes port, README line wrap)
+- CI: valid job IDs in `_required.yml` (no slashes allowed in keys)
+- Dependabot: removed invalid Docker `package-ecosystem` entry
+
 ## [0.1.0] - 2026-04-23
 
 ### Added
