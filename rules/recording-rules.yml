@@ -15,10 +15,10 @@ groups:
         expr: (hi_tasks_by_status{status="completed"} / (hi_tasks_total + 1e-9))
 
       - record: hi:nats_in_msgs:rate5m
-        expr: rate(nats_in_msgs_total[5m])
+        expr: rate(nats_in_msgs[5m])
 
       - record: hi:nats_out_msgs:rate5m
-        expr: rate(nats_out_msgs_total[5m])
+        expr: rate(nats_out_msgs[5m])
 
       - record: hi:nats_msgs_total:rate5m
-        expr: (rate(nats_in_msgs_total[5m]) + rate(nats_out_msgs_total[5m]))
+        expr: (rate(nats_in_msgs[5m]) + rate(nats_out_msgs[5m]))
