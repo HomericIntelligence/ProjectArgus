@@ -1,6 +1,8 @@
 # Atlas — HomericIntelligence Dashboard
 
-Atlas is the unified observability dashboard for the HomericIntelligence distributed agent mesh. It provides a real-time overview of agents, tasks, NATS streams, and hosts via a lightweight Go/Chi HTTP server with a dark-themed UI built on htmx and SSE.
+Atlas is the unified observability dashboard for the HomericIntelligence distributed agent mesh.
+It provides a real-time overview of agents, tasks, NATS streams, and hosts via a lightweight
+Go/Chi HTTP server with a dark-themed UI built on htmx and SSE.
 
 ## Quick Start
 
@@ -27,7 +29,7 @@ All configuration is via environment variables with the `ATLAS_` prefix:
 | `ATLAS_NATS_MON_URL` | `http://nats:8222` | NATS monitoring URL |
 | `ATLAS_AGAMEMNON_URL` | `http://agamemnon:8080` | Agamemnon API URL |
 | `ATLAS_NESTOR_URL` | `http://nestor:8081` | Nestor API URL |
-| `ATLAS_HERMES_URL` | `http://hermes:8085` | Hermes event bridge URL |
+| `ATLAS_HERMES_URL` | `http://hermes:8080` | Hermes event bridge URL |
 | `ATLAS_PROMETHEUS_URL` | `http://prometheus:9090` | Prometheus URL |
 | `ATLAS_GRAFANA_URL` | `http://grafana:3000` | Grafana URL |
 | `ATLAS_AUTH_MODE` | `none` | Auth mode (none/basic/bearer) |
