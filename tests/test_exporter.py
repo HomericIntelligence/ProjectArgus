@@ -140,6 +140,10 @@ class TestCollectFormat(unittest.TestCase):
         output = self._run_collect()
         self.assertIn("# TYPE", output, "output must contain at least one # TYPE declaration")
 
+    def test_contains_help_lines(self):
+        output = self._run_collect()
+        self.assertIn("# HELP", output, "output must contain at least one # HELP line")
+
     def test_no_exception_when_all_upstreams_down(self):
         """collect() must not raise even if every upstream returns None."""
         hc_patch, fetch_patch = _patch_collect(
@@ -232,7 +236,7 @@ class TestCollectMetricNames(unittest.TestCase):
 
     def test_exporter_self_metrics_present(self):
         self.assertIn("homeric_exporter_scrape_duration_seconds", self.output)
-        self.assertIn("homeric_exporter_scrape_timestamp", self.output)
+        self.assertIn("homeric_exporter_scrape_timestamp_seconds", self.output)
         self.assertIn("homeric_exporter_fetch_errors_total", self.output)
 
 

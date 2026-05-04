@@ -5,7 +5,6 @@ compose_cmd := if `command -v podman-compose 2>/dev/null || true` != "" { "podma
 AGAMEMNON_URL := "http://172.20.0.1:8080"
 GRAFANA_PORT := "3000"
 GRAFANA_URL  := "http://localhost:" + GRAFANA_PORT
-GRAFANA_AUTH := "admin:admin"
 
 # === Default ===
 
@@ -14,8 +13,9 @@ default:
 
 # === Services ===
 
-# Start all observability services
+# Start all observability services (validates .env exists first)
 start:
+    @test -f .env || { echo "ERROR: .env not found — copy .env.example to .env and fill in values"; exit 1; }
     {{compose_cmd}} up -d
 
 # Stop all services
@@ -57,7 +57,7 @@ reload-prometheus:
 # Query Prometheus to verify all scrape targets are up
 test-scrape:
     @echo "Querying Prometheus for 'up' metric..."
-    curl -s "http://localhost:9090/api/v1/query?query=up" | jq '.data.result[] | {job: .metric.job, instance: .metric.instance, up: .value[1]}'
+    {{compose_cmd}} exec prometheus wget -qO- "http://localhost:9090/api/v1/query?query=up" | python3 -c "import json,sys; [print(r['metric'].get('job','?'), r['metric'].get('instance','?'), r['value'][1]) for r in json.load(sys.stdin)['data']['result']]"
 
 # Manually test Agamemnon and Nestor health endpoints
 scrape-agamemnon:
@@ -76,5 +76,7 @@ restore VOLUME FILE:
 # === Grafana ===
 
 # Import all JSON dashboards from dashboards/ into Grafana via API
+# Reads GRAFANA_ADMIN_PASSWORD from .env (required — never hardcoded)
 import-dashboards:
-    GRAFANA_PORT={{GRAFANA_PORT}} GRAFANA_ADMIN_PASSWORD=$(echo "{{GRAFANA_AUTH}}" | cut -d: -f2) ./scripts/import-dashboards.sh
+    @test -f .env || { echo "ERROR: .env not found — copy .env.example to .env and fill in values"; exit 1; }
+    GRAFANA_PORT={{GRAFANA_PORT}} GRAFANA_ADMIN_PASSWORD=$$(grep '^GF_ADMIN_PASSWORD=' .env | cut -d= -f2-) ./scripts/import-dashboards.sh
