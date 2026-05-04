@@ -41,6 +41,11 @@ All services run on the `argus` Docker network and are managed via `docker-compo
   storage used, distinct subject counts.
 - **task-throughput.json** (`uid: task-throughput`): Tasks by status
   (`hi_tasks_by_status`), completed/failed counts per hour.
+- **argus-health.json** (`uid: argus-health`): Prometheus scrape-target counts (`up`),
+  Homeric Exporter health (`up{job="homeric-exporter"}`), total targets. Stat panels
+  backed by Prometheus.
+- **loki-explorer.json** (`uid: loki-explorer`): Syslog stream (`{job="syslog"}`),
+  NATS log stream (`{job="nats"}`). Log panels backed by Loki.
 
 ## Repository Structure
 
