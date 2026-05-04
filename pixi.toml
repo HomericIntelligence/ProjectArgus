@@ -18,3 +18,12 @@ python = ">=3.11"
 start  = "just start"
 stop   = "just stop"
 status = "just status"
+
+[feature.lint.dependencies]
+pip-audit = ">=2.7"
+
+[feature.lint.tasks]
+pip-audit = "pip-audit --min-severity high"
+
+[environments]
+lint = ["lint"]
