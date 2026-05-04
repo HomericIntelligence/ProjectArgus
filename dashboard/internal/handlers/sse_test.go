@@ -148,7 +148,7 @@ func TestSSEEventDelivery(t *testing.T) {
 		if strings.HasPrefix(line, "event: ") {
 			topic := strings.TrimPrefix(line, "event: ")
 			if topic == "heartbeat" {
-				// Skip heartbeat frames.
+				// Skip legacy named heartbeat frames (now emitted as SSE comments).
 				continue
 			}
 			eventLine = line
@@ -266,18 +266,10 @@ func TestSSEReplay(t *testing.T) {
 	// Read 2 complete SSE frames. Each frame: "event: ...\ndata: ...\n\n".
 	lines := sseLines(t, resp.Body, 2)
 
-	// Filter out any heartbeat frames before asserting.
+	// Filter out heartbeat comment frames (": heartbeat") before asserting.
 	var dataLines []string
-	inHeartbeat := false
 	for _, l := range lines {
-		if strings.HasPrefix(l, "event: heartbeat") {
-			inHeartbeat = true
-			continue
-		}
-		if inHeartbeat {
-			if l == "" {
-				inHeartbeat = false
-			}
+		if strings.HasPrefix(l, ": ") {
 			continue
 		}
 		if strings.HasPrefix(l, "data: ") {
@@ -494,17 +486,21 @@ func TestSSEMultipleTopics(t *testing.T) {
 	}
 }
 
-// TestSSEHeartbeat asserts that a heartbeat frame is sent even when no events are
-// published, within a 20-second window. This test does NOT call t.Parallel() because
-// it carries a long timeout.
+// TestSSEHeartbeat asserts that a heartbeat comment frame is sent when no events are
+// published. HeartbeatInterval is overridden to 50ms to keep the test fast.
 func TestSSEHeartbeat(t *testing.T) {
+	t.Parallel()
+
+	old := handlers.HeartbeatInterval
+	handlers.HeartbeatInterval = 50 * time.Millisecond
+	t.Cleanup(func() { handlers.HeartbeatInterval = old })
+
 	_, h := newTestBus(t)
 
 	srv := httptest.NewServer(h)
 	t.Cleanup(srv.Close)
 
-	// Use a context that matches the test's acceptable window.
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, srv.URL+"/events", nil)
@@ -523,7 +519,7 @@ func TestSSEHeartbeat(t *testing.T) {
 
 	go func() {
 		for scanner.Scan() {
-			if scanner.Text() == "event: heartbeat" {
+			if scanner.Text() == ": heartbeat" {
 				select {
 				case heartbeatSeen <- struct{}{}:
 				default:
@@ -535,8 +531,8 @@ func TestSSEHeartbeat(t *testing.T) {
 
 	select {
 	case <-heartbeatSeen:
-		// A heartbeat arrived within the 20-second window.
+		// Heartbeat comment frame received.
 	case <-ctx.Done():
-		t.Error("no heartbeat received within 20 seconds")
+		t.Error("no heartbeat received within 3 seconds")
 	}
 }
