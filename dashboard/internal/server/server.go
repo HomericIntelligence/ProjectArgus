@@ -7,20 +7,28 @@ import (
 	"time"
 
 	"github.com/HomericIntelligence/atlas/internal/config"
+	"github.com/HomericIntelligence/atlas/internal/events"
+	"github.com/HomericIntelligence/atlas/internal/handlers"
 )
 
 type Server struct {
 	cfg *config.Config
 	srv *http.Server
+	bus *events.Bus
+	sse *handlers.SSE
 }
 
-func New(cfg *config.Config) *Server {
-	s := &Server{cfg: cfg}
+func New(cfg *config.Config, bus *events.Bus) *Server {
+	s := &Server{
+		cfg: cfg,
+		bus: bus,
+		sse: handlers.NewSSE(bus),
+	}
 	s.srv = &http.Server{
 		Addr:         cfg.ListenAddr,
 		Handler:      s.routes(),
 		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 30 * time.Second,
+		WriteTimeout: 0, // SSE connections are long-lived; disable write timeout.
 		IdleTimeout:  60 * time.Second,
 	}
 	return s
