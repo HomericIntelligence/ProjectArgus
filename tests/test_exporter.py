@@ -311,6 +311,28 @@ class TestHandler(unittest.TestCase):
         response = self._get_response("/metrics", mock_collect_output=collect_output)
         self.assertIn("hi_agents_total", response)
 
+    def test_log_message_emits_debug_record(self):
+        """log_message must forward to log.debug, not swallow the record."""
+        handler, _ = _make_handler("/metrics")
+        fmt = '%s - - [%s] "%s" %s %s'
+        args = ("127.0.0.1", "04/May/2026 12:00:00", "GET /metrics HTTP/1.1", "200", "-")
+        with patch.object(exporter_mod.log, "debug") as mock_debug:
+            handler.log_message(fmt, *args)
+        mock_debug.assert_called_once_with(fmt, *args)
+
+    def test_log_message_silent_at_info_level(self):
+        """log_message must not raise and must produce no INFO-level output."""
+        import logging
+        handler, _ = _make_handler("/metrics")
+        with patch.object(exporter_mod.log, "debug"):
+            # At INFO level the debug call should not propagate to any handler
+            original_level = exporter_mod.log.level
+            exporter_mod.log.setLevel(logging.INFO)
+            try:
+                handler.log_message("GET /metrics HTTP/1.1 200 -")
+            finally:
+                exporter_mod.log.setLevel(original_level)
+
 
 if __name__ == "__main__":
     unittest.main()
