@@ -42,7 +42,8 @@ services:
     volumes:
       - ./configs/promtail.yml:/etc/promtail/config.yml:ro
       - /var/log:/var/log:ro
-      - /tmp:/tmp:ro
+      - /tmp/hermes.log:/logs/hermes.log:ro
+      - promtail_positions:/run/promtail
     command: -config.file=/etc/promtail/config.yml
     networks:
       - argus
@@ -88,3 +89,4 @@ volumes:
   prometheus_data:
   loki_data:
   grafana_data:
+  promtail_positions:
