@@ -45,6 +45,17 @@ test-scrape:
 scrape-agamemnon:
     ./scripts/scrape-agamemnon.sh {{AGAMEMNON_URL}}
 
+# === Alertmanager ===
+
+# Reload Alertmanager configuration
+reload-alertmanager:
+    curl -s -X POST http://localhost:9093/-/reload && echo "Alertmanager config reloaded."
+
+# Check Alertmanager health and cluster status
+test-alertmanager:
+    curl -s http://localhost:9093/-/healthy && echo ""
+    curl -s http://localhost:9093/api/v2/status | jq '.cluster.status'
+
 # === Grafana ===
 
 # Import all JSON dashboards from dashboards/ into Grafana via API
