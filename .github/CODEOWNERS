@@ -1,0 +1,17 @@
+# Default owner for all files
+* @HomericIntelligence/argus-maintainers
+
+# Prometheus scrape configs and alert rules — security-sensitive (metric poisoning, alert suppression)
+/configs/prometheus.yml @HomericIntelligence/argus-maintainers @HomericIntelligence/security
+/rules/ @HomericIntelligence/argus-maintainers @HomericIntelligence/security
+
+# Grafana dashboards and datasource provisioning
+/configs/grafana/ @HomericIntelligence/argus-maintainers
+/dashboards/ @HomericIntelligence/argus-maintainers
+
+# Loki and Promtail configs — log pipeline (log injection risk)
+/configs/loki.yml @HomericIntelligence/argus-maintainers @HomericIntelligence/security
+/configs/promtail.yml @HomericIntelligence/argus-maintainers @HomericIntelligence/security
+
+# CI/CD and GitHub configuration
+/.github/ @HomericIntelligence/argus-maintainers
