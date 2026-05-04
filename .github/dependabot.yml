@@ -9,3 +9,15 @@ updates:
     target-branch: "main"
     commit-message:
       prefix: "chore(deps)"
+
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+    labels:
+      - "dependencies"
+    target-branch: "main"
+    commit-message:
+      prefix: "chore(deps)"
