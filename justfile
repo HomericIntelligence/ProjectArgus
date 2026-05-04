@@ -1,6 +1,7 @@
 # === Variables ===
 
 compose_cmd := if `command -v podman-compose 2>/dev/null || true` != "" { "podman-compose" } else { "docker compose" }
+container_cmd := if `command -v podman-compose 2>/dev/null || true` != "" { "podman" } else { "docker" }
 
 AGAMEMNON_URL := "http://172.20.0.1:8080"
 GRAFANA_PORT := "3000"
@@ -67,11 +68,11 @@ scrape-agamemnon:
 
 # Back up Prometheus and Loki data volumes to ./backups/
 backup:
-    ./scripts/backup.sh
+    CONTAINER_CMD={{container_cmd}} ./scripts/backup.sh
 
 # Restore a volume from a backup file: just restore <volume> <file>
 restore VOLUME FILE:
-    ./scripts/restore.sh {{VOLUME}} {{FILE}}
+    CONTAINER_CMD={{container_cmd}} ./scripts/restore.sh {{VOLUME}} {{FILE}}
 
 # === Grafana ===
 

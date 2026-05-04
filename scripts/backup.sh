@@ -14,7 +14,7 @@ echo "Backup directory: $BACKUP_DIR"
 for vol in prometheus_data loki_data; do
     out="$BACKUP_DIR/${vol}_${TIMESTAMP}.tar.gz"
     echo "Backing up $vol -> $out"
-    docker run --rm -v "${vol}:/data:ro" -v "${BACKUP_DIR}:/backups" \
+    ${CONTAINER_CMD:-docker} run --rm -v "${vol}:/data:ro" -v "${BACKUP_DIR}:/backups" \
         alpine tar czf "/backups/${vol}_${TIMESTAMP}.tar.gz" -C /data .
     echo "  ✓ $vol backup complete"
 done
