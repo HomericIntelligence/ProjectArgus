@@ -36,6 +36,43 @@ All configuration is via environment variables with the `ATLAS_` prefix:
 | `ATLAS_TAILSCALE_SOURCE` | `static` | Tailscale source (static/api/socket) |
 | `ATLAS_POLL_AGAMEMNON_MS` | `5000` | Poll interval for Agamemnon in ms |
 
+## SSE Event Stream
+
+Atlas exposes a real-time event stream at `/events` using Server-Sent Events.
+
+```
+GET /events?topics=agent,task&replay=20
+```
+
+| Parameter | Description |
+|---|---|
+| `topics` | Comma-separated topic filter. Omit to receive all topics. |
+| `replay` | Number of buffered events to replay on connect (ring buffer, max 256). |
+
+**Topics** (derived from NATS subject prefix):
+
+| Topic | NATS stream | Subject pattern |
+|---|---|---|
+| `agent` | `homeric-agents` | `hi.agents.>` |
+| `task` | `homeric-tasks` | `hi.tasks.>` |
+| `myrmidon` | `homeric-myrmidon` | `hi.myrmidon.>` |
+| `research` | `homeric-research` | `hi.research.>` |
+| `pipeline` | `homeric-pipeline` | `hi.pipeline.>` |
+| `log` | `homeric-logs` | `hi.logs.>` |
+
+**Wire format** (per event):
+```
+event: {topic}
+data: {json payload}
+
+```
+
+Keepalive comment frames are sent every 15 seconds:
+```
+: heartbeat
+
+```
+
 ## Building
 
 ```bash

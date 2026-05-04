@@ -107,11 +107,6 @@ func (b *Bus) Unsubscribe(ch <-chan Event) {
 func (b *Bus) Publish(e Event) {
 	b.mu.Lock()
 	b.ring.Push(e)
-	// Snapshot the subscriber set while holding the write lock so we can
-	// send without holding the lock (avoiding potential deadlock if a
-	// subscriber's select blocks, though our send is non-blocking anyway).
-	// We collect references and send inside the lock because the send itself
-	// is non-blocking (select + default).
 	for ch := range b.subs {
 		select {
 		case ch <- e:

@@ -7,6 +7,7 @@ package nats
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -105,8 +106,7 @@ func (s *Subscriber) Start(ctx context.Context) error {
 			natsgo.ConsumerFilterSubjects(sc.Subjects...),
 		)
 		if err != nil {
-			// Best-effort: log and continue to other streams.
-			_ = err
+			slog.Error("atlas: JetStream subscribe failed", "stream", sc.Stream, "err", err)
 		}
 	}
 

@@ -29,25 +29,21 @@ func NewSSE(bus *events.Bus) *SSE {
 // subscriber channel on the bus and receives all matching events until the
 // client disconnects or the request context is cancelled.
 func (h *SSE) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// 1. Set required SSE headers.
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("X-Accel-Buffering", "no")
 
-	// 8. Require http.Flusher; return 500 if not available.
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		http.Error(w, "streaming not supported", http.StatusInternalServerError)
 		return
 	}
 
-	// 2. WriteHeader(200) and flush.
 	w.WriteHeader(http.StatusOK)
 	flusher.Flush()
 
 	ctx := r.Context()
 
-	// 3. Parse ?topics= query param (comma-separated; empty = accept all).
 	topicFilter := make(map[string]struct{})
 	if raw := r.URL.Query().Get("topics"); raw != "" {
 		for _, t := range strings.Split(raw, ",") {
@@ -58,7 +54,6 @@ func (h *SSE) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// 4. Parse ?replay=N and send buffered events first.
 	if replayStr := r.URL.Query().Get("replay"); replayStr != "" {
 		if n, err := strconv.Atoi(replayStr); err == nil && n > 0 {
 			for _, e := range h.bus.Snapshot(n) {
@@ -70,11 +65,9 @@ func (h *SSE) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// 5. Subscribe to bus.
 	ch := h.bus.Subscribe(1000)
 	defer h.bus.Unsubscribe(ch)
 
-	// 6. Main event loop.
 	ticker := time.NewTicker(HeartbeatInterval)
 	defer ticker.Stop()
 
@@ -84,8 +77,8 @@ func (h *SSE) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 
 		case <-ticker.C:
-			// Heartbeat to keep the connection alive.
-			if _, err := fmt.Fprint(w, "event: heartbeat\ndata: {}\n\n"); err != nil {
+			// SSE comment frame — discarded by the parser, keeps the TCP connection alive.
+			if _, err := fmt.Fprint(w, ": heartbeat\n\n"); err != nil {
 				return
 			}
 			flusher.Flush()
