@@ -1,0 +1,30 @@
+package templates
+
+import "github.com/HomericIntelligence/atlas/internal/store"
+
+templ EventRow(e store.RawEvent) {
+	<div class="event-row" id={ "evt-" + e.ReceivedAt.Format("20060102150405.000") }>
+		<span class="mono ts">{ e.ReceivedAt.Format("15:04:05.000") }</span>
+		<span class={ "badge " + topicBadgeClass(e.Topic) }>{ e.Topic }</span>
+		<span class="mono event-subject">{ e.Subject }</span>
+		<span class="event-payload mono">{ truncate(string(e.Payload), 160) }</span>
+	</div>
+}
+
+func truncate(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	return s[:n] + "…"
+}
+
+func topicBadgeClass(t string) string {
+	switch t {
+	case "agent":
+		return "green"
+	case "task":
+		return "blue"
+	default:
+		return ""
+	}
+}

@@ -10,6 +10,7 @@ import (
 
 	"github.com/HomericIntelligence/atlas/internal/config"
 	"github.com/HomericIntelligence/atlas/internal/events"
+	"github.com/HomericIntelligence/atlas/internal/poller"
 	"github.com/HomericIntelligence/atlas/internal/server"
 	"github.com/HomericIntelligence/atlas/internal/store"
 	"github.com/HomericIntelligence/atlas/internal/tailscale"
@@ -37,6 +38,14 @@ func main() {
 	// Start probe runner.
 	prober := store.NewProber(cache, 10*time.Second)
 	go prober.Start(ctx)
+
+	// Start Agamemnon poller (agents + tasks every 2s).
+	agamemnonPoller := poller.NewAgamemnonPoller(cfg, cache)
+	go agamemnonPoller.Start(ctx, 2*time.Second)
+
+	// Start NATS monitoring poller (varz + jsz every 5s).
+	natsPoller := poller.NewNATSPoller(cfg, cache)
+	go natsPoller.Start(ctx, 5*time.Second)
 
 	srv := server.New(cfg, bus, cache)
 

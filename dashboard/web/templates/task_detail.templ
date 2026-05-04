@@ -1,0 +1,45 @@
+package templates
+
+import "github.com/HomericIntelligence/atlas/internal/store"
+
+templ TaskDetailPage(t store.TaskRecord, history []store.RawEvent) {
+	@Layout("Task: " + t.Subject) {
+		<div class="detail-card">
+			<div class="detail-header">
+				<span class="hostname">{ t.Subject }</span>
+				<span class="mono">{ t.ID }</span>
+				<span class={ "badge " + taskStatusClass(t.Status) }>{ t.Status }</span>
+			</div>
+			<dl class="detail-meta">
+				<dt>Team</dt><dd class="mono">{ t.TeamID }</dd>
+				<dt>Created</dt><dd class="mono">{ t.CreatedAt.Format("2006-01-02 15:04:05") }</dd>
+				<dt>Updated</dt><dd class="mono">{ t.UpdatedAt.Format("2006-01-02 15:04:05") }</dd>
+				if t.AssigneeID != "" {
+					<dt>Assigned agent</dt>
+					<dd><a href={ templ.SafeURL("/agents/" + t.AssigneeID) } class="accent-link">{ t.AssigneeID }</a></dd>
+				}
+			</dl>
+		</div>
+		<h2 class="section-title">Live event tail</h2>
+		<div id="task-event-tail"
+			hx-ext="sse"
+			sse-connect="/events?topics=task"
+			sse-swap="task"
+			hx-swap="afterbegin">
+			for _, e := range history {
+				@EventRow(e)
+			}
+		</div>
+	}
+}
+
+func taskStatusClass(s string) string {
+	switch s {
+	case "completed":
+		return "green"
+	case "in_progress":
+		return "blue"
+	default:
+		return "red"
+	}
+}
