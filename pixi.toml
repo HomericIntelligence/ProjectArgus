@@ -8,8 +8,11 @@ platforms = ["linux-64"]
 [dependencies]
 just = ">=1.13"
 jq = ">=1.6"
+python = ">=3.11"
+pytest = ">=7.0"
 
 [tasks]
 start  = "just start"
 stop   = "just stop"
 status = "just status"
+test   = "python -m pytest tests/ -v"

@@ -5,19 +5,31 @@ datasources:
     type: prometheus
     uid: prometheus
     access: proxy
-    url: http://prometheus:9090
+    url: https://prometheus:9090
     isDefault: true
     editable: false
     jsonData:
       httpMethod: POST
       prometheusType: Prometheus
+      tlsSkipVerify: false
+      tlsAuthWithCACert: true
+    secureJsonData:
+      tlsCACert: |
+        # Mount the CA cert content here, or use Grafana's provisioning
+        # secret injection. See docs/tls-setup.md for options.
 
   - name: Loki
     type: loki
     uid: loki
     access: proxy
-    url: http://loki:3100
+    url: https://loki:3100
     isDefault: false
     editable: false
     jsonData:
       maxLines: 1000
+      tlsSkipVerify: false
+      tlsAuthWithCACert: true
+    secureJsonData:
+      tlsCACert: |
+        # Mount the CA cert content here, or use Grafana's provisioning
+        # secret injection. See docs/tls-setup.md for options.

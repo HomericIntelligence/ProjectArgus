@@ -12,6 +12,9 @@ services:
     volumes:
       - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./rules:/etc/prometheus/rules:ro
+      - ./certs/prometheus.crt:/etc/prometheus/tls/prometheus.crt:ro
+      - ./certs/prometheus.key:/etc/prometheus/tls/prometheus.key:ro
+      - ./certs/ca.crt:/etc/prometheus/tls/ca.crt:ro
       - prometheus_data:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
@@ -19,6 +22,7 @@ services:
       - "--web.enable-lifecycle"
       - "--web.console.libraries=/usr/share/prometheus/console_libraries"
       - "--web.console.templates=/usr/share/prometheus/consoles"
+      - "--web.config.file=/etc/prometheus/prometheus.yml"
     networks:
       - argus
 
@@ -30,6 +34,9 @@ services:
       - "3100:3100"
     volumes:
       - ./configs/loki.yml:/etc/loki/local-config.yaml:ro
+      - ./certs/loki.crt:/etc/loki/tls/loki.crt:ro
+      - ./certs/loki.key:/etc/loki/tls/loki.key:ro
+      - ./certs/ca.crt:/etc/loki/tls/ca.crt:ro
       - loki_data:/loki
     command: -config.file=/etc/loki/local-config.yaml
     networks:
@@ -41,6 +48,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./configs/promtail.yml:/etc/promtail/config.yml:ro
+      - ./certs/ca.crt:/etc/promtail/tls/ca.crt:ro
       - /var/log:/var/log:ro
       - /tmp:/tmp:ro
     command: -config.file=/etc/promtail/config.yml
@@ -58,10 +66,15 @@ services:
     volumes:
       - ./dashboards:/var/lib/grafana/dashboards:ro
       - ./configs/grafana:/etc/grafana/provisioning:ro
+      - ./certs/grafana.crt:/etc/grafana/tls/grafana.crt:ro
+      - ./certs/grafana.key:/etc/grafana/tls/grafana.key:ro
       - grafana_data:/var/lib/grafana
     environment:
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+      GF_SERVER_PROTOCOL: https
+      GF_SERVER_CERT_FILE: /etc/grafana/tls/grafana.crt
+      GF_SERVER_CERT_KEY: /etc/grafana/tls/grafana.key
     networks:
       - argus
     depends_on:
@@ -76,11 +89,18 @@ services:
       - "9100:9100"
     volumes:
       - ./exporter/exporter.py:/exporter.py:ro
+      - ./certs/ca.crt:/certs/ca.crt:ro
     command: python /exporter.py
     environment:
       AGAMEMNON_URL: "http://172.20.0.1:8080"
       NESTOR_URL: "http://172.20.0.1:8081"
       NATS_URL: "http://172.24.0.1:8222"
+      # Set *_TLS_CA to /certs/ca.crt when upstream services serve HTTPS
+      # with our self-signed CA (or a Tailscale-issued cert).
+      # Leave empty while upstream services remain HTTP-only.
+      AGAMEMNON_TLS_CA: ""
+      NESTOR_TLS_CA: ""
+      NATS_TLS_CA: ""
     networks:
       - argus
 

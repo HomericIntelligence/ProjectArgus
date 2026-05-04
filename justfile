@@ -3,14 +3,20 @@
 compose_cmd := if `which podman-compose 2>/dev/null` != "" { "podman-compose" } else { "docker compose" }
 
 AGAMEMNON_URL := "http://172.20.0.1:8080"
-GRAFANA_PORT := "3000"
-GRAFANA_URL  := "http://localhost:" + GRAFANA_PORT
+GRAFANA_PORT := "3001"
+GRAFANA_URL  := "https://localhost:" + GRAFANA_PORT
 GRAFANA_AUTH := "admin:admin"
 
 # === Default ===
 
 default:
     @just --list
+
+# === Certificates ===
+
+# Generate self-signed CA and per-service TLS certificates
+gen-certs:
+    bash certs/gen-certs.sh
 
 # === Services ===
 
@@ -34,12 +40,12 @@ logs SERVICE:
 
 # Hot-reload Prometheus configuration (no restart needed)
 reload-prometheus:
-    curl -s -X POST http://localhost:9090/-/reload && echo "Prometheus config reloaded."
+    curl -s -X POST --cacert certs/ca.crt https://localhost:9090/-/reload && echo "Prometheus config reloaded."
 
 # Query Prometheus to verify all scrape targets are up
 test-scrape:
     @echo "Querying Prometheus for 'up' metric..."
-    curl -s "http://localhost:9090/api/v1/query?query=up" | jq '.data.result[] | {job: .metric.job, instance: .metric.instance, up: .value[1]}'
+    curl -s --cacert certs/ca.crt "https://localhost:9090/api/v1/query?query=up" | jq '.data.result[] | {job: .metric.job, instance: .metric.instance, up: .value[1]}'
 
 # Manually test Agamemnon and Nestor health endpoints
 scrape-agamemnon:
@@ -54,7 +60,7 @@ import-dashboards:
     for f in dashboards/*.json; do
         echo "Importing $f ..."
         payload=$(jq -n --slurpfile dash "$f" '{"dashboard": $dash[0], "overwrite": true, "folderId": 0}')
-        curl -s -u {{GRAFANA_AUTH}} \
+        curl -s --cacert certs/ca.crt -u {{GRAFANA_AUTH}} \
             -H "Content-Type: application/json" \
             -d "$payload" \
             "{{GRAFANA_URL}}/api/dashboards/db" | jq '.status'
