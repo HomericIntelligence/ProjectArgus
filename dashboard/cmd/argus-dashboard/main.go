@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/HomericIntelligence/atlas/internal/config"
+	"github.com/HomericIntelligence/atlas/internal/events"
 	"github.com/HomericIntelligence/atlas/internal/server"
 	"github.com/HomericIntelligence/atlas/internal/version"
 )
@@ -19,7 +20,8 @@ func main() {
 
 	slog.Info("starting atlas", "version", version.Version, "addr", cfg.ListenAddr)
 
-	srv := server.New(cfg)
+	bus := events.NewBus(256)
+	srv := server.New(cfg, bus)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()

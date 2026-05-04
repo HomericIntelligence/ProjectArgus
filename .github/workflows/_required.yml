@@ -143,11 +143,8 @@ jobs:
           if command -v promtool &>/dev/null; then
             find . -path './.git' -prune -o -name "*.yml" -print | xargs promtool check rules 2>/dev/null || true
           fi
-          # Validate docker-compose YAML (seed .env from example so required vars are set)
+          # Validate docker-compose YAML
           if [ -f docker-compose.yml ]; then
-            if [ -f .env.example ] && [ ! -f .env ]; then
-              cp .env.example .env
-            fi
             docker compose config --quiet
           fi
           # Validate all YAML files with yamllint (the canonical config-repo unit test)
@@ -210,7 +207,7 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
       - name: Trivy filesystem scan
-        uses: aquasecurity/trivy-action@v0.36.0
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: fs
           scan-ref: .
@@ -246,7 +243,7 @@ jobs:
 
       - name: Upload Gitleaks SARIF
         if: always() && hashFiles('gitleaks.sarif') != ''
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: gitleaks-report
           path: gitleaks.sarif
@@ -294,7 +291,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
       - name: Ensure no :latest image tags in compose files
         run: |
-          LATEST_HITS=$(grep -rh "image:" . --exclude-dir=".git" --exclude-dir=".github" --include="*.yml" --include="*.yaml" | grep ":latest" || true)
+          LATEST_HITS=$(grep -rh "image:" . --include="*.yml" --include="*.yaml" | grep ":latest" || true)
           if [ -n "$LATEST_HITS" ]; then
             echo "FAIL: found :latest image tags — pin all images to explicit versions:"
             echo "$LATEST_HITS"
@@ -302,3 +299,20 @@ jobs:
           else
             echo "OK: no :latest image tags found"
           fi
+
+  atlas-dashboard:
+    name: atlas/dashboard
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: dashboard/go.mod
+          cache-dependency-path: dashboard/go.sum
+      - name: go vet
+        working-directory: dashboard
+        run: go vet ./...
+      - name: go test
+        working-directory: dashboard
+        run: go test ./internal/nats/...

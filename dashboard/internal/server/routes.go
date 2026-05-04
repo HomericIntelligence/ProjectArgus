@@ -16,6 +16,7 @@ func (s *Server) routes() http.Handler {
 	r.Get("/healthz", s.handleHealthz)
 	r.Get("/readyz", s.handleHealthz)
 	r.Get("/", s.handleOverview)
+	r.Get("/events", s.sse.ServeHTTP)
 	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
 
 	return r
