@@ -41,3 +41,21 @@ groups:
         annotations:
           summary: "Task failure rate above 20%"
           description: "More than 20% of tasks are in failed state. Value: {{ $value | humanizePercentage }}."
+
+      - alert: JetstreamConsumerStale
+        expr: time() - hi_jetstream_consumer_scrape_timestamp > 300
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "JetStream consumer scrape is stale"
+          description: "No scrape from jetstream-consumer in more than 5 minutes."
+
+      - alert: JetstreamConsumerNotConnected
+        expr: absent(hi_jetstream_consumer_scrape_timestamp)
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "JetStream consumer is not running"
+          description: "hi_jetstream_consumer_scrape_timestamp metric is absent."
