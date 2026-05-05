@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
 # import-dashboards.sh — Import all Grafana dashboard JSON files via the HTTP API.
-# Reads GRAFANA_ADMIN_PASSWORD from env (default: admin).
+# Reads GRAFANA_ADMIN_PASSWORD from env; exits with an error if unset.
 set -euo pipefail
 
 GRAFANA_PORT="${GRAFANA_PORT:-3000}"
 GRAFANA_URL="http://localhost:${GRAFANA_PORT}"
-GRAFANA_ADMIN_PASSWORD="${GRAFANA_ADMIN_PASSWORD:-admin}"
+
+if [[ -z "${GRAFANA_ADMIN_PASSWORD:-}" ]]; then
+    echo "ERROR: GRAFANA_ADMIN_PASSWORD is not set. Source .env or set GF_ADMIN_PASSWORD." >&2
+    exit 1
+fi
+
 GRAFANA_AUTH="admin:${GRAFANA_ADMIN_PASSWORD}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -27,11 +32,17 @@ fi
 for f in "${files[@]}"; do
     echo "Importing $(basename "$f") ..."
     payload=$(jq -n --slurpfile dash "$f" '{"dashboard": $dash[0], "overwrite": true, "folderId": 0}')
-    result=$(curl -sf -u "$GRAFANA_AUTH" \
+    http_code=$(curl -s -o /tmp/grafana_import_resp.json -w "%{http_code}" \
+        -u "$GRAFANA_AUTH" \
         -H "Content-Type: application/json" \
         -d "$payload" \
         "${GRAFANA_URL}/api/dashboards/db")
-    status=$(echo "$result" | jq -r '.status // "unknown"')
+    if [[ "$http_code" -lt 200 || "$http_code" -ge 300 ]]; then
+        echo "  -> ERROR: HTTP $http_code from Grafana API" >&2
+        cat /tmp/grafana_import_resp.json >&2
+        exit 1
+    fi
+    status=$(jq -r '.status // "unknown"' /tmp/grafana_import_resp.json)
     echo "  -> status: $status"
 done
 
