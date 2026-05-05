@@ -14,8 +14,12 @@ default:
 
 # === Services ===
 
+# Generate secrets/htpasswd from LOKI_AUTH_USER and LOKI_AUTH_PASSWORD in .env
+gen-htpasswd:
+    @scripts/gen-htpasswd.sh
+
 # Start all observability services
-start:
+start: gen-htpasswd
     {{compose_cmd}} up -d
 
 # Stop all services
@@ -27,7 +31,7 @@ status:
     {{compose_cmd}} ps
 
 # Restart all services (stop then start)
-restart:
+restart: gen-htpasswd
     {{compose_cmd}} down
     {{compose_cmd}} up -d
 
