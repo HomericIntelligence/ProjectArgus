@@ -39,6 +39,9 @@ All configuration is via environment variables with the `ATLAS_` prefix:
 | `ATLAS_TAILSCALE_API_KEY` | `` | API source: Tailscale API key |
 | `ATLAS_TAILNET_NAME` | `` | API source: Tailnet name (e.g. `example.com`) |
 | `ATLAS_POLL_AGAMEMNON_MS` | `5000` | Poll interval for Agamemnon in ms |
+| `ATLAS_NATS_DASHBOARD_URL` | `` | Optional: URL of external nats-dashboard (linked on /nats page) |
+| `ATLAS_NATS_TOP_URL` | `` | Optional: ttyd URL serving nats-top (embedded as iframe on /nats page) |
+| `ATLAS_MNEMOSYNE_SKILLS_DIR` | `/mnt/mnemosyne/skills` | Path to Mnemosyne skills directory (read by /mnemosyne page) |
 
 ## SSE Event Stream
 
@@ -94,6 +97,13 @@ Keepalive comment frames are sent every 15 seconds:
 | `GET` | `/partials/agents/table` | htmx fragment — filtered agents tbody |
 | `GET` | `/agents/{id}` | Agent detail page with live 50-event tail |
 | `GET` | `/tasks/{id}` | Task detail page with live event tail |
+| `GET` | `/grafana` | Grafana iframe panel matrix (8 panels, time-range selector) |
+| `GET` | `/nats` | NATS monitoring page — JetStream streams, connections, external links |
+| `GET` | `/partials/nats/streams` | htmx fragment — JetStream streams table (5 s poll) |
+| `GET` | `/partials/nats/connections` | htmx fragment — NATS connections table (5 s poll) |
+| `GET` | `/mnemosyne` | Mnemosyne skill registry browser with live search |
+| `GET` | `/partials/mnemosyne/search` | htmx fragment — filtered skill list |
+| `GET` | `/partials/mnemosyne/skill/{name}` | htmx fragment — rendered markdown body of a skill |
 | `GET` | `/static/*` | Static assets (CSS, JS) |
 
 ## Building

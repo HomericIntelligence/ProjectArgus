@@ -14,7 +14,10 @@ import (
 // GET /partials/mnemosyne/search?q=
 func (h *HostsHandler) MnemosyneSearch(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query().Get("q")
-	skills, _ := h.mnemoReader.Skills() //nolint:errcheck
+	var skills []mnemosyne.Skill
+	if h.mnemoReader != nil {
+		skills, _ = h.mnemoReader.Skills() //nolint:errcheck
+	}
 	filtered := mnemosyne.Filter(skills, q)
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	templates.SkillList(filtered).Render(r.Context(), w) //nolint:errcheck
@@ -24,6 +27,10 @@ func (h *HostsHandler) MnemosyneSearch(w http.ResponseWriter, r *http.Request) {
 // GET /partials/mnemosyne/skill/{name}
 func (h *HostsHandler) MnemosyneSkillBody(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
+	if h.mnemoReader == nil {
+		http.NotFound(w, r)
+		return
+	}
 	skills, _ := h.mnemoReader.Skills() //nolint:errcheck
 	for _, s := range skills {
 		if s.Name == name {
