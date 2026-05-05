@@ -12,12 +12,12 @@ tailing. It does NOT modify Agamemnon or any other HomericIntelligence service.
 
 ## Stack Components
 
-| Service    | Image                     | Purpose                                 |
-|------------|---------------------------|-----------------------------------------|
-| Prometheus | prom/prometheus:latest    | Scrape and store metrics                |
-| Loki       | grafana/loki:latest       | Store and query log streams             |
-| Promtail   | grafana/promtail:latest   | Tail container logs and ship to Loki    |
-| Grafana    | grafana/grafana:latest    | Visualize metrics and logs              |
+| Service    | Image                          | Purpose                                 |
+|------------|--------------------------------|-----------------------------------------|
+| Prometheus | prom/prometheus:v2.54.1        | Scrape and store metrics                |
+| Loki       | grafana/loki:3.1.2             | Store and query log streams             |
+| Promtail   | grafana/promtail:3.1.2         | Tail container logs and ship to Loki    |
+| Grafana    | grafana/grafana:11.2.2         | Visualize metrics and logs              |
 
 All services run on the `argus` Docker network and are managed via `docker-compose.yml`.
 
