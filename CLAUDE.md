@@ -18,6 +18,7 @@ tailing. It does NOT modify Agamemnon or any other HomericIntelligence service.
 | Loki       | grafana/loki:3.1.2             | Store and query log streams             |
 | Promtail   | grafana/promtail:3.1.2         | Tail container logs and ship to Loki    |
 | Grafana    | grafana/grafana:11.2.2         | Visualize metrics and logs              |
+| Atlas dashboard | ghcr.io/homericintelligence/atlas:latest | Unified status dashboard on :3002 |
 
 All services run on the `argus` Docker network and are managed via `docker-compose.yml`.
 
@@ -35,6 +36,8 @@ All services run on the `argus` Docker network and are managed via `docker-compo
 ## Environment Variables
 
 Copy `.env.example` to `.env` at the repository root and set values before running `just start`.
+
+Atlas dashboard variables use the `ATLAS_` prefix — see `dashboard/README.md` for the full table.
 
 | Variable | Required | Default | Purpose |
 |---|---|---|---|

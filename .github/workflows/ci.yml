@@ -33,6 +33,7 @@ jobs:
             configs/grafana/datasources.yml \
             configs/grafana/dashboards.yml \
             rules/agent-alerts.yml \
+            rules/atlas-alerts.yml \
             docker-compose.yml
 
       - name: Validate Grafana dashboard JSON
@@ -104,3 +105,20 @@ jobs:
       - name: go test
         working-directory: dashboard
         run: go test -race ./internal/...
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          working-directory: dashboard
+
+      - name: Check templ generate (no-op)
+        working-directory: dashboard
+        run: |
+          go install github.com/a-h/templ/cmd/templ@latest
+          templ generate ./...
+          git diff --exit-code
+
+      - name: Docker build
+        working-directory: dashboard
+        run: docker build -t argus-dashboard:ci .
