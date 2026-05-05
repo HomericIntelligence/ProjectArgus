@@ -1,0 +1,114 @@
+package templates
+
+import (
+	"strconv"
+	"strings"
+
+	"github.com/HomericIntelligence/atlas/internal/store"
+)
+
+func joinSubjects(ss []string) string { return strings.Join(ss, ", ") }
+func formatUint(n uint64) string      { return strconv.FormatUint(n, 10) }
+func formatInt(n int64) string        { return strconv.FormatInt(n, 10) }
+func itoa(n int) string               { return strconv.Itoa(n) }
+
+templ NATSPage(streams []store.NATSStreamInfo, conns []store.NATSConnInfo, natsDashURL, natsTopURL, natsMon string) {
+	@Layout("NATS") {
+		<h2 class="section-title">JetStream Streams</h2>
+		<div
+			id="nats-streams"
+			hx-get="/partials/nats/streams"
+			hx-trigger="every 5s"
+			hx-swap="innerHTML"
+		>
+			@NATSStreamRows(streams)
+		</div>
+		<h2 class="section-title" style="margin-top:1.5rem">Connections</h2>
+		<div
+			id="nats-connections"
+			hx-get="/partials/nats/connections"
+			hx-trigger="every 5s"
+			hx-swap="innerHTML"
+		>
+			@NATSConnRows(conns)
+		</div>
+		<h2 class="section-title" style="margin-top:1.5rem">External Links</h2>
+		<div class="external-links">
+			if natsDashURL != "" {
+				<a href={ templ.SafeURL(natsDashURL) } target="_blank" rel="noopener noreferrer" class="ext-link">nats-dashboard ↗</a>
+			} else {
+				<span class="ext-link disabled">nats-dashboard (not configured)</span>
+			}
+			<a href={ templ.SafeURL(natsMon + "/varz") } target="_blank" rel="noopener noreferrer" class="ext-link">/varz ↗</a>
+			<a href={ templ.SafeURL(natsMon + "/jsz") } target="_blank" rel="noopener noreferrer" class="ext-link">/jsz ↗</a>
+			<a href={ templ.SafeURL(natsMon + "/connz") } target="_blank" rel="noopener noreferrer" class="ext-link">/connz ↗</a>
+		</div>
+		if natsTopURL != "" {
+			<h2 class="section-title" style="margin-top:1.5rem">nats-top</h2>
+			<iframe
+				src={ templ.SafeURL(natsTopURL) }
+				sandbox="allow-scripts allow-popups"
+				class="nats-top-iframe"
+				title="nats-top"
+			></iframe>
+		}
+	}
+}
+
+templ NATSStreamRows(streams []store.NATSStreamInfo) {
+	<table class="data-table">
+		<thead>
+			<tr>
+				<th>Stream</th>
+				<th>Subjects</th>
+				<th>Messages</th>
+				<th>Consumers</th>
+			</tr>
+		</thead>
+		<tbody>
+			if len(streams) == 0 {
+				<tr><td colspan="4" class="empty-state">No streams found.</td></tr>
+			} else {
+				for _, s := range streams {
+					<tr>
+						<td class="mono">{ s.Name }</td>
+						<td class="mono">{ joinSubjects(s.Subjects) }</td>
+						<td class="mono">{ formatUint(s.Messages) }</td>
+						<td class="mono">{ itoa(s.Consumers) }</td>
+					</tr>
+				}
+			}
+		</tbody>
+	</table>
+}
+
+templ NATSConnRows(conns []store.NATSConnInfo) {
+	<table class="data-table">
+		<thead>
+			<tr>
+				<th>Name</th>
+				<th>IP</th>
+				<th>Subs</th>
+				<th>In</th>
+				<th>Out</th>
+				<th>Uptime</th>
+			</tr>
+		</thead>
+		<tbody>
+			if len(conns) == 0 {
+				<tr><td colspan="6" class="empty-state">No connections.</td></tr>
+			} else {
+				for _, c := range conns {
+					<tr>
+						<td>{ c.Name }</td>
+						<td class="mono">{ c.IP }</td>
+						<td class="mono">{ itoa(c.Subscriptions) }</td>
+						<td class="mono">{ formatInt(c.InMsgs) }</td>
+						<td class="mono">{ formatInt(c.OutMsgs) }</td>
+						<td class="mono ts">{ c.Uptime }</td>
+					</tr>
+				}
+			}
+		</tbody>
+	</table>
+}

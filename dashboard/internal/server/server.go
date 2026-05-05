@@ -9,6 +9,7 @@ import (
 	"github.com/HomericIntelligence/atlas/internal/config"
 	"github.com/HomericIntelligence/atlas/internal/events"
 	"github.com/HomericIntelligence/atlas/internal/handlers"
+	"github.com/HomericIntelligence/atlas/internal/mnemosyne"
 	"github.com/HomericIntelligence/atlas/internal/store"
 )
 
@@ -27,7 +28,10 @@ func New(cfg *config.Config, bus *events.Bus, cache *store.Cache) *Server {
 		bus:          bus,
 		sse:          handlers.NewSSE(bus),
 		apiHandler:   handlers.NewHosts(cache),
-		hostsHandler: handlers.NewHostsHandler(cache),
+		hostsHandler: handlers.NewHostsHandler(cache).
+				WithGrafanaURL(cfg.GrafanaURL).
+				WithNATSURLs(cfg.NATSDashboardURL, cfg.NATSTopURL, cfg.NATSMonURL).
+				WithMnemoReader(mnemosyne.NewReader(cfg.MnemosyneSkillsDir)),
 	}
 	s.srv = &http.Server{
 		Addr:         cfg.ListenAddr,

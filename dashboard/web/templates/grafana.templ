@@ -1,0 +1,39 @@
+package templates
+
+import (
+	"github.com/HomericIntelligence/atlas/internal/grafana"
+)
+
+templ GrafanaPage(panels []grafana.Panel, grafanaBase, from, to string) {
+	@Layout("Grafana") {
+		<div class="time-range-bar">
+			<span class="label">Time range:</span>
+			<button onclick="setTimeRange('now-1h','now')">1h</button>
+			<button onclick="setTimeRange('now-6h','now')">6h</button>
+			<button onclick="setTimeRange('now-24h','now')">24h</button>
+			<button onclick="setTimeRange('now-7d','now')">7d</button>
+		</div>
+		<div class="grafana-grid">
+			for _, p := range panels {
+				<div class="panel-container">
+					<div class="panel-title">{ p.Title }</div>
+					<iframe
+						src={ templ.SafeURL(grafana.PanelURL(grafanaBase, p, from, to)) }
+						sandbox="allow-scripts allow-popups"
+						loading="lazy"
+						title={ p.Title }>
+					</iframe>
+				</div>
+			}
+		</div>
+		<script>
+		function setTimeRange(from, to) {
+			document.querySelectorAll('.grafana-grid iframe').forEach(function(el) {
+				el.src = el.src
+					.replace(/from=[^&]+/, 'from=' + from)
+					.replace(/to=[^&]+/, 'to=' + to);
+			});
+		}
+		</script>
+	}
+}

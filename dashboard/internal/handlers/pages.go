@@ -6,18 +6,45 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/HomericIntelligence/atlas/internal/grafana"
+	"github.com/HomericIntelligence/atlas/internal/mnemosyne"
 	"github.com/HomericIntelligence/atlas/internal/store"
 	"github.com/HomericIntelligence/atlas/web/templates"
 )
 
 // HostsHandler serves the /hosts page and the /partials/host/{name} fragment.
 type HostsHandler struct {
-	cache *store.Cache
+	cache        *store.Cache
+	grafanaURL   string
+	natsDashURL  string
+	natsTopURL   string
+	natsMon      string
+	mnemoReader  *mnemosyne.Reader
 }
 
 // NewHostsHandler creates a HostsHandler backed by the given cache.
 func NewHostsHandler(cache *store.Cache) *HostsHandler {
 	return &HostsHandler{cache: cache}
+}
+
+// WithMnemoReader sets the Mnemosyne skills reader on the handler.
+func (h *HostsHandler) WithMnemoReader(r *mnemosyne.Reader) *HostsHandler {
+	h.mnemoReader = r
+	return h
+}
+
+// WithGrafanaURL returns a copy of the HostsHandler with the Grafana base URL set.
+func (h *HostsHandler) WithGrafanaURL(url string) *HostsHandler {
+	h.grafanaURL = url
+	return h
+}
+
+// WithNATSURLs sets the NATS external link URLs on the handler.
+func (h *HostsHandler) WithNATSURLs(dashURL, topURL, monURL string) *HostsHandler {
+	h.natsDashURL = dashURL
+	h.natsTopURL = topURL
+	h.natsMon = monURL
+	return h
 }
 
 // ServeHTTP renders the full hosts page.
@@ -90,4 +117,47 @@ func filterAgents(agents []store.AgentRecord, search, status, host string) []sto
 		out = append(out, a)
 	}
 	return out
+}
+
+// GrafanaPage renders the /grafana panel matrix page.
+func (h *HostsHandler) GrafanaPage(w http.ResponseWriter, r *http.Request) {
+	from := r.URL.Query().Get("from")
+	if from == "" {
+		from = "now-1h"
+	}
+	to := r.URL.Query().Get("to")
+	if to == "" {
+		to = "now"
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	templates.GrafanaPage(grafana.KnownPanels, h.grafanaURL, from, to).Render(r.Context(), w) //nolint:errcheck
+}
+
+// NATSPage renders the /nats page with JetStream streams and connections.
+func (h *HostsHandler) NATSPage(w http.ResponseWriter, r *http.Request) {
+	streams := h.cache.GetNATSStreams()
+	conns := h.cache.GetNATSConns()
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	templates.NATSPage(streams, conns, h.natsDashURL, h.natsTopURL, h.natsMon).Render(r.Context(), w) //nolint:errcheck
+}
+
+// NATSStreamsPartial renders only the streams table rows for HTMX partial updates.
+func (h *HostsHandler) NATSStreamsPartial(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	templates.NATSStreamRows(h.cache.GetNATSStreams()).Render(r.Context(), w) //nolint:errcheck
+}
+
+// NATSConnsPartial renders only the connections table rows for HTMX partial updates.
+func (h *HostsHandler) NATSConnsPartial(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	templates.NATSConnRows(h.cache.GetNATSConns()).Render(r.Context(), w) //nolint:errcheck
+}
+
+// MnemosynePage renders the /mnemosyne skill registry browser page.
+func (h *HostsHandler) MnemosynePage(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query().Get("q")
+	skills, _ := h.mnemoReader.Skills() //nolint:errcheck
+	filtered := mnemosyne.Filter(skills, q)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	templates.MnemosynePage(filtered, q).Render(r.Context(), w) //nolint:errcheck
 }
