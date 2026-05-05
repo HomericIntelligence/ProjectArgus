@@ -184,7 +184,7 @@ services:
           cpus: "0.10"
 
   argus-dashboard:
-    image: ${ATLAS_IMAGE:-ghcr.io/homericintelligence/atlas:latest}
+    image: ghcr.io/homericintelligence/atlas:v0.2.0
     container_name: argus-dashboard
     restart: unless-stopped
     ports:
