@@ -1,0 +1,33 @@
+package templates
+
+import "github.com/HomericIntelligence/atlas/internal/store"
+
+templ AgentDetailPage(a store.AgentRecord, task *store.TaskRecord, history []store.RawEvent) {
+	@Layout("Agent: " + a.Name) {
+		<div class="detail-card">
+			<div class="detail-header">
+				<span class="hostname">{ a.Name }</span>
+				<span class="mono">{ a.ID }</span>
+				<span class={ "badge " + agentStatusClass(a.Status) }>{ a.Status }</span>
+			</div>
+			<dl class="detail-meta">
+				<dt>Host</dt><dd class="mono">{ a.Host }</dd>
+				<dt>Updated</dt><dd class="mono">{ a.UpdatedAt.Format("2006-01-02 15:04:05") }</dd>
+				if task != nil {
+					<dt>Current task</dt>
+					<dd><a href={ templ.SafeURL("/tasks/" + task.ID) } class="accent-link">{ task.Subject }</a></dd>
+				}
+			</dl>
+		</div>
+		<h2 class="section-title">Live event tail</h2>
+		<div id="agent-event-tail"
+			hx-ext="sse"
+			sse-connect="/events?topics=agent"
+			sse-swap="agent"
+			hx-swap="afterbegin">
+			for _, e := range history {
+				@EventRow(e)
+			}
+		</div>
+	}
+}

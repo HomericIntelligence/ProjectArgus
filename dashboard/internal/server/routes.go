@@ -19,6 +19,10 @@ func (s *Server) routes() http.Handler {
 	r.Get("/hosts", s.hostsHandler.ServeHTTP)
 	r.Get("/api/hosts", s.apiHandler.ServeHTTP)
 	r.Get("/partials/host/{name}", s.hostsHandler.Partial)
+	r.Get("/agents", s.hostsHandler.AgentsPage)
+	r.Get("/partials/agents/table", s.hostsHandler.AgentsTablePartial)
+	r.Get("/agents/{id}", s.hostsHandler.AgentDetail)
+	r.Get("/tasks/{id}", s.hostsHandler.TaskDetail)
 	r.Get("/events", s.sse.ServeHTTP)
 	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
 

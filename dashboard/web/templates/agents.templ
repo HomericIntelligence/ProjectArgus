@@ -1,0 +1,43 @@
+package templates
+
+import "github.com/HomericIntelligence/atlas/internal/store"
+
+templ AgentsPage(agents []store.AgentRecord, search, statusFilter, hostFilter string) {
+	@Layout("Agents") {
+		<div class="filter-bar">
+			<input type="text" name="search" value={ search } placeholder="Search name / host"
+				hx-get="/partials/agents/table" hx-target="#agents-table-body"
+				hx-trigger="keyup changed delay:300ms" hx-include="[name='status'],[name='host']"/>
+			<select name="status" hx-get="/partials/agents/table" hx-target="#agents-table-body"
+				hx-trigger="change" hx-include="[name='search'],[name='host']">
+				<option value="">All statuses</option>
+				<option value="idle" selected={ statusFilter == "idle" }>idle</option>
+				<option value="running" selected={ statusFilter == "running" }>running</option>
+				<option value="error" selected={ statusFilter == "error" }>error</option>
+			</select>
+		</div>
+		<table class="data-table">
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Name</th>
+					<th>Host</th>
+					<th>Status</th>
+					<th>Updated</th>
+				</tr>
+			</thead>
+			<tbody id="agents-table-body"
+				hx-ext="sse"
+				sse-connect="/events?topics=agent"
+				sse-swap="agent"
+				hx-swap="outerHTML settle:50ms">
+				for _, a := range agents {
+					@AgentRow(a)
+				}
+			</tbody>
+		</table>
+		if len(agents) == 0 {
+			<p class="empty-state">No agents registered.</p>
+		}
+	}
+}

@@ -1,0 +1,35 @@
+package templates
+
+import "github.com/HomericIntelligence/atlas/internal/store"
+
+templ AgentRow(a store.AgentRecord) {
+	<tr id={ "agent-row-" + a.ID }
+		hx-get={ "/agents/" + a.ID }
+		hx-target="main"
+		hx-push-url="true"
+		style="cursor:pointer">
+		<td class="mono">{ shortID(a.ID) }</td>
+		<td>{ a.Name }</td>
+		<td class="mono">{ a.Host }</td>
+		<td><span class={ "badge " + agentStatusClass(a.Status) }>{ a.Status }</span></td>
+		<td class="ts mono">{ a.UpdatedAt.Format("15:04:05") }</td>
+	</tr>
+}
+
+func shortID(id string) string {
+	if len(id) >= 8 {
+		return id[:8]
+	}
+	return id
+}
+
+func agentStatusClass(s string) string {
+	switch s {
+	case "idle":
+		return "green"
+	case "running":
+		return "blue"
+	default:
+		return "red"
+	}
+}
