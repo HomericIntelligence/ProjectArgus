@@ -49,9 +49,9 @@ func AgentRow(a store.AgentRecord) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs("/agents/" + a.ID)
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(agentPath(a.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates/agent_row.templ`, Line: 7, Col: 28}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates/agent_row.templ`, Line: 7, Col: 26}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -168,6 +168,19 @@ func agentStatusClass(s string) string {
 	default:
 		return "red"
 	}
+}
+
+// agentPath returns a safe relative URL path for an agent ID.
+// Only alphanumeric and hyphen/underscore characters are preserved.
+func agentPath(id string) string {
+	safe := make([]byte, 0, len(id))
+	for i := 0; i < len(id); i++ {
+		c := id[i]
+		if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_' {
+			safe = append(safe, c)
+		}
+	}
+	return "/agents/" + string(safe)
 }
 
 var _ = templruntime.GeneratedTemplate

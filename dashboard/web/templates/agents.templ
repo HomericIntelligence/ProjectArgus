@@ -1,6 +1,23 @@
 package templates
 
-import "github.com/HomericIntelligence/atlas/internal/store"
+import (
+	"sort"
+
+	"github.com/HomericIntelligence/atlas/internal/store"
+)
+
+func uniqueHosts(agents []store.AgentRecord) []string {
+	seen := make(map[string]struct{}, len(agents))
+	for _, a := range agents {
+		seen[a.Host] = struct{}{}
+	}
+	hosts := make([]string, 0, len(seen))
+	for h := range seen {
+		hosts = append(hosts, h)
+	}
+	sort.Strings(hosts)
+	return hosts
+}
 
 templ AgentsPage(agents []store.AgentRecord, search, statusFilter, hostFilter string) {
 	@Layout("Agents") {
@@ -14,6 +31,13 @@ templ AgentsPage(agents []store.AgentRecord, search, statusFilter, hostFilter st
 				<option value="idle" selected={ statusFilter == "idle" }>idle</option>
 				<option value="running" selected={ statusFilter == "running" }>running</option>
 				<option value="error" selected={ statusFilter == "error" }>error</option>
+			</select>
+			<select name="host" hx-get="/partials/agents/table" hx-target="#agents-table-body"
+				hx-trigger="change" hx-include="[name='search'],[name='status']">
+				<option value="">All hosts</option>
+				for _, h := range uniqueHosts(agents) {
+					<option value={ h } selected={ hostFilter == h }>{ h }</option>
+				}
 			</select>
 		</div>
 		<table class="data-table">
@@ -31,13 +55,14 @@ templ AgentsPage(agents []store.AgentRecord, search, statusFilter, hostFilter st
 				sse-connect="/events?topics=agent"
 				sse-swap="agent"
 				hx-swap="outerHTML settle:50ms">
-				for _, a := range agents {
-					@AgentRow(a)
+				if len(agents) == 0 {
+					<tr><td colspan="5" class="empty-state">No agents registered.</td></tr>
+				} else {
+					for _, a := range agents {
+						@AgentRow(a)
+					}
 				}
 			</tbody>
 		</table>
-		if len(agents) == 0 {
-			<p class="empty-state">No agents registered.</p>
-		}
 	}
 }
