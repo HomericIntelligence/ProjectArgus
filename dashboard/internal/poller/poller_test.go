@@ -302,3 +302,133 @@ func TestNATSPoller_StartAndStop(t *testing.T) {
 		t.Fatal("nats poller did not stop after context cancellation")
 	}
 }
+
+// TestNATSPoller_FetchDetail_StreamsAndConns verifies that fetchDetail correctly
+// parses stream list from /jsz?detail=1 and connection list from /connz and
+// updates the cache with the correct values.
+func TestNATSPoller_FetchDetail_StreamsAndConns(t *testing.T) {
+	varzJSON := `{"connections":2,"in_msgs":10,"out_msgs":8}`
+	jszJSON := `{"num_streams":2}`
+	jszDetailJSON := `{"streams":[{"config":{"name":"homeric-agents","subjects":["hi.agents.>"]},"state":{"messages":42,"bytes":1024,"num_consumers":3},"created":"2024-01-01T00:00:00Z"},{"config":{"name":"homeric-tasks","subjects":["hi.tasks.>","hi.tasks.done"]},"state":{"messages":7,"bytes":256,"num_consumers":1},"created":"2024-02-01T00:00:00Z"}]}`
+	connzJSON := `{"connections":[{"name":"agamemnon","ip":"10.0.0.1","subscriptions":5,"in_msgs":100,"out_msgs":80,"uptime":"1h0m0s"},{"name":"nestor","ip":"10.0.0.2","subscriptions":2,"in_msgs":20,"out_msgs":15,"uptime":"30m0s"}]}`
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Path {
+		case "/varz":
+			_, _ = w.Write([]byte(varzJSON))
+		case "/jsz":
+			if r.URL.RawQuery == "detail=1" {
+				_, _ = w.Write([]byte(jszDetailJSON))
+			} else {
+				_, _ = w.Write([]byte(jszJSON))
+			}
+		case "/connz":
+			_, _ = w.Write([]byte(connzJSON))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer srv.Close()
+
+	cache := store.NewCache()
+	cfg := makeConfig("", srv.URL)
+	p := NewNATSPoller(cfg, cache)
+	p.fetch(context.Background())
+
+	// Verify streams.
+	streams := cache.GetNATSStreams()
+	if len(streams) != 2 {
+		t.Fatalf("expected 2 streams, got %d", len(streams))
+	}
+	if streams[0].Name != "homeric-agents" {
+		t.Errorf("expected first stream name 'homeric-agents', got %q", streams[0].Name)
+	}
+	if len(streams[0].Subjects) != 1 || streams[0].Subjects[0] != "hi.agents.>" {
+		t.Errorf("unexpected subjects for homeric-agents: %v", streams[0].Subjects)
+	}
+	if streams[0].Messages != 42 {
+		t.Errorf("expected 42 messages, got %d", streams[0].Messages)
+	}
+	if streams[0].Consumers != 3 {
+		t.Errorf("expected 3 consumers, got %d", streams[0].Consumers)
+	}
+	if streams[1].Name != "homeric-tasks" {
+		t.Errorf("expected second stream name 'homeric-tasks', got %q", streams[1].Name)
+	}
+	if len(streams[1].Subjects) != 2 {
+		t.Errorf("expected 2 subjects for homeric-tasks, got %d", len(streams[1].Subjects))
+	}
+
+	// Verify connections.
+	conns := cache.GetNATSConns()
+	if len(conns) != 2 {
+		t.Fatalf("expected 2 connections, got %d", len(conns))
+	}
+	if conns[0].Name != "agamemnon" {
+		t.Errorf("expected first conn name 'agamemnon', got %q", conns[0].Name)
+	}
+	if conns[0].IP != "10.0.0.1" {
+		t.Errorf("expected IP '10.0.0.1', got %q", conns[0].IP)
+	}
+	if conns[0].Subscriptions != 5 {
+		t.Errorf("expected 5 subscriptions, got %d", conns[0].Subscriptions)
+	}
+	if conns[0].InMsgs != 100 {
+		t.Errorf("expected 100 in_msgs, got %d", conns[0].InMsgs)
+	}
+	if conns[0].Uptime != "1h0m0s" {
+		t.Errorf("expected uptime '1h0m0s', got %q", conns[0].Uptime)
+	}
+	if conns[1].Name != "nestor" {
+		t.Errorf("expected second conn name 'nestor', got %q", conns[1].Name)
+	}
+}
+
+// TestNATSPoller_FetchDetail_JszDetailError_LeavesStreamsCacheIntact verifies that
+// when /jsz?detail=1 returns an error, the streams cache is left unchanged while
+// the connections cache is still updated from /connz.
+func TestNATSPoller_FetchDetail_JszDetailError_LeavesStreamsCacheIntact(t *testing.T) {
+	varzJSON := `{"connections":1,"in_msgs":5,"out_msgs":3}`
+	jszJSON := `{"num_streams":1}`
+	connzJSON := `{"connections":[{"name":"hermes","ip":"10.0.0.3","subscriptions":1,"in_msgs":5,"out_msgs":3,"uptime":"5m0s"}]}`
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Path {
+		case "/varz":
+			_, _ = w.Write([]byte(varzJSON))
+		case "/jsz":
+			if r.URL.RawQuery == "detail=1" {
+				http.Error(w, "error", http.StatusInternalServerError)
+			} else {
+				_, _ = w.Write([]byte(jszJSON))
+			}
+		case "/connz":
+			_, _ = w.Write([]byte(connzJSON))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer srv.Close()
+
+	cache := store.NewCache()
+	// Pre-populate streams with known data.
+	cache.SetNATSStreams([]store.NATSStreamInfo{{Name: "prior-stream", Messages: 99}})
+
+	cfg := makeConfig("", srv.URL)
+	p := NewNATSPoller(cfg, cache)
+	p.fetch(context.Background())
+
+	// Streams cache must be unchanged after /jsz?detail=1 error.
+	streams := cache.GetNATSStreams()
+	if len(streams) != 1 || streams[0].Name != "prior-stream" {
+		t.Errorf("expected streams cache unchanged, got %+v", streams)
+	}
+
+	// Connections cache must be updated from /connz.
+	conns := cache.GetNATSConns()
+	if len(conns) != 1 || conns[0].Name != "hermes" {
+		t.Errorf("expected connections cache updated with hermes, got %+v", conns)
+	}
+}
