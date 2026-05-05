@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -11,6 +12,10 @@ import (
 	"github.com/HomericIntelligence/atlas/internal/store"
 	"github.com/HomericIntelligence/atlas/web/templates"
 )
+
+// validTimeRange matches Grafana relative time expressions (now, now-1h, now-7d, etc.)
+// and absolute epoch-millisecond timestamps (13-digit numbers).
+var validTimeRange = regexp.MustCompile(`^(now(-[0-9]+(s|m|h|d|w|y))?|[0-9]{13})$`)
 
 // HostsHandler serves the /hosts page and the /partials/host/{name} fragment.
 type HostsHandler struct {
@@ -122,11 +127,11 @@ func filterAgents(agents []store.AgentRecord, search, status, host string) []sto
 // GrafanaPage renders the /grafana panel matrix page.
 func (h *HostsHandler) GrafanaPage(w http.ResponseWriter, r *http.Request) {
 	from := r.URL.Query().Get("from")
-	if from == "" {
+	if !validTimeRange.MatchString(from) {
 		from = "now-1h"
 	}
 	to := r.URL.Query().Get("to")
-	if to == "" {
+	if !validTimeRange.MatchString(to) {
 		to = "now"
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -156,7 +161,10 @@ func (h *HostsHandler) NATSConnsPartial(w http.ResponseWriter, r *http.Request) 
 // MnemosynePage renders the /mnemosyne skill registry browser page.
 func (h *HostsHandler) MnemosynePage(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query().Get("q")
-	skills, _ := h.mnemoReader.Skills() //nolint:errcheck
+	var skills []mnemosyne.Skill
+	if h.mnemoReader != nil {
+		skills, _ = h.mnemoReader.Skills() //nolint:errcheck
+	}
 	filtered := mnemosyne.Filter(skills, q)
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	templates.MnemosynePage(filtered, q).Render(r.Context(), w) //nolint:errcheck

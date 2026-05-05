@@ -15,8 +15,8 @@ func (s *Server) securityHeaders(next http.Handler) http.Handler {
 		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
 		w.Header().Set("Content-Security-Policy",
 			fmt.Sprintf(
-				"default-src 'self'; script-src 'self' https://unpkg.com; connect-src 'self'; style-src 'self'; img-src 'self' data:; frame-src 'self' %s",
-				s.cfg.GrafanaURL,
+				"default-src 'self'; script-src 'self' https://unpkg.com; connect-src 'self'; style-src 'self'; img-src 'self' data:; frame-src 'self' %s %s",
+				s.cfg.GrafanaURL, s.cfg.LokiURL,
 			),
 		)
 		next.ServeHTTP(w, r)
