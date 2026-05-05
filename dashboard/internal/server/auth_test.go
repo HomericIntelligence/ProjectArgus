@@ -155,6 +155,36 @@ func TestAuthBasic_CorrectCreds_Returns200(t *testing.T) {
 	}
 }
 
+func TestAuthBearer_EmptyConfiguredToken_Returns401(t *testing.T) {
+	// When ATLAS_AUTH_BEARER_TOKEN is unset (empty string), bearer mode must
+	// reject all requests — including ones that send an empty Bearer value.
+	handler := applyMiddleware(AuthBearer, "", "", "", okHandler)
+
+	for _, tc := range []struct {
+		name string
+		req  *http.Request
+	}{
+		{"no auth", httptest.NewRequest(http.MethodGet, "/", nil)},
+		{
+			"empty bearer header",
+			func() *http.Request {
+				r := httptest.NewRequest(http.MethodGet, "/", nil)
+				r.Header.Set("Authorization", "Bearer ")
+				return r
+			}(),
+		},
+		{"empty query token", httptest.NewRequest(http.MethodGet, "/?token=", nil)},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			rr := httptest.NewRecorder()
+			handler.ServeHTTP(rr, tc.req)
+			if rr.Code != http.StatusUnauthorized {
+				t.Errorf("expected 401, got %d", rr.Code)
+			}
+		})
+	}
+}
+
 // --- SSE / EventSource compatibility ---
 
 func TestAuthBearer_SSE_QueryToken_Returns200(t *testing.T) {

@@ -24,7 +24,7 @@ groups:
           summary: "Atlas SSE dropping events for slow subscribers"
 
       - alert: AtlasUpstreamDown
-        expr: atlas_poll_errors_total{source=~"agamemnon|nestor|hermes"} > 0
+        expr: increase(atlas_poll_errors_total{source=~"agamemnon|nestor|hermes"}[5m]) > 0
         for: 5m
         labels:
           severity: warning

@@ -314,10 +314,8 @@ type blockingResponseWriter struct {
 }
 
 func (b *blockingResponseWriter) Write(p []byte) (int, error) {
-	select {
-	case <-b.ctx.Done():
-		return 0, b.ctx.Err()
-	}
+	<-b.ctx.Done() //nolint:gosimple // S1000: select with single case is intentional for readability
+	return 0, b.ctx.Err()
 }
 
 func (b *blockingResponseWriter) Flush() {} // satisfy http.Flusher
