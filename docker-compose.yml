@@ -86,6 +86,7 @@ services:
   promtail:
     image: grafana/promtail:3.1.2
     container_name: argus-promtail
+    hostname: hermes
     restart: unless-stopped
     logging:
       driver: json-file
