@@ -12,6 +12,7 @@ func (s *Server) routes() http.Handler {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(securityHeaders)
 
 	r.Get("/healthz", s.handleHealthz)
 	r.Get("/readyz", s.handleHealthz)

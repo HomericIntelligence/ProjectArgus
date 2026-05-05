@@ -140,7 +140,7 @@ func topicBadgeClass(t string) string {
 	case "task":
 		return "blue"
 	default:
-		return ""
+		return "gray"
 	}
 }
 

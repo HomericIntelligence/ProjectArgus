@@ -156,8 +156,16 @@ main { padding: 1.5rem; }
 .data-table th { color: #8b949e; font-weight: 600; text-transform: uppercase; font-size: .7rem; letter-spacing: .05em; }
 .data-table tbody tr:hover { background: var(--surface); }
 .badge.blue { background: #1a2a3a; color: #58a6ff; }
+.badge.gray { background: #1e2530; color: #8b949e; }
 .ts { color: #8b949e; }
 .empty-state { color: #8b949e; padding: 2rem 0; text-align: center; }
+
+/* Mobile: collapse data-table columns below 640 px */
+@media (max-width: 640px) {
+    .data-table th:nth-child(1),
+    .data-table td:nth-child(1) { display: none; }
+    .detail-meta { grid-template-columns: 1fr; }
+}
 
 /* ── Detail pages ─────────────────────────────────────────────────────────── */
 .detail-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; margin-bottom: 1.5rem; }

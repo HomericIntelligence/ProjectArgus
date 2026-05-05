@@ -63,7 +63,7 @@ func (h *SSE) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if raw := r.URL.Query().Get("topics"); raw != "" {
 		for _, t := range strings.Split(raw, ",") {
 			t = strings.TrimSpace(t)
-			if t != "" {
+			if allowedTopic(t) {
 				topicFilter[t] = struct{}{}
 			}
 		}
@@ -115,6 +115,24 @@ func (h *SSE) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			flusher.Flush()
 		}
 	}
+}
+
+// allowedTopics is the server-side whitelist for SSE topic subscriptions.
+var allowedTopics = map[string]struct{}{
+	"agent":    {},
+	"task":     {},
+	"nats":     {},
+	"host":     {},
+	"log":      {},
+	"research": {},
+	"pipeline": {},
+	"myrmidon": {},
+}
+
+// allowedTopic returns true if t is a recognised bus topic.
+func allowedTopic(t string) bool {
+	_, ok := allowedTopics[t]
+	return ok
 }
 
 // writeEvent writes a single SSE frame for the given event.

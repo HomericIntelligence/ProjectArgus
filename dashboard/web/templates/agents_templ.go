@@ -8,7 +8,24 @@ package templates
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "github.com/HomericIntelligence/atlas/internal/store"
+import (
+	"sort"
+
+	"github.com/HomericIntelligence/atlas/internal/store"
+)
+
+func uniqueHosts(agents []store.AgentRecord) []string {
+	seen := make(map[string]struct{}, len(agents))
+	for _, a := range agents {
+		seen[a.Host] = struct{}{}
+	}
+	hosts := make([]string, 0, len(seen))
+	for h := range seen {
+		hosts = append(hosts, h)
+	}
+	sort.Strings(hosts)
+	return hosts
+}
 
 func AgentsPage(agents []store.AgentRecord, search, statusFilter, hostFilter string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -50,7 +67,7 @@ func AgentsPage(agents []store.AgentRecord, search, statusFilter, hostFilter str
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(search)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates/agents.templ`, Line: 8, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates/agents.templ`, Line: 25, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -63,7 +80,7 @@ func AgentsPage(agents []store.AgentRecord, search, statusFilter, hostFilter str
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(statusFilter == "idle")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates/agents.templ`, Line: 14, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates/agents.templ`, Line: 31, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -76,7 +93,7 @@ func AgentsPage(agents []store.AgentRecord, search, statusFilter, hostFilter str
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(statusFilter == "running")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates/agents.templ`, Line: 15, Col: 64}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates/agents.templ`, Line: 32, Col: 64}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -89,31 +106,81 @@ func AgentsPage(agents []store.AgentRecord, search, statusFilter, hostFilter str
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(statusFilter == "error")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates/agents.templ`, Line: 16, Col: 60}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates/agents.templ`, Line: 33, Col: 60}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\">error</option></select></div><table class=\"data-table\"><thead><tr><th>ID</th><th>Name</th><th>Host</th><th>Status</th><th>Updated</th></tr></thead> <tbody id=\"agents-table-body\" hx-ext=\"sse\" sse-connect=\"/events?topics=agent\" sse-swap=\"agent\" hx-swap=\"outerHTML settle:50ms\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\">error</option></select> <select name=\"host\" hx-get=\"/partials/agents/table\" hx-target=\"#agents-table-body\" hx-trigger=\"change\" hx-include=\"[name='search'],[name='status']\"><option value=\"\">All hosts</option> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, a := range agents {
-				templ_7745c5c3_Err = AgentRow(a).Render(ctx, templ_7745c5c3_Buffer)
+			for _, h := range uniqueHosts(agents) {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<option value=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var7 string
+				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(h)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates/agents.templ`, Line: 39, Col: 22}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\" selected=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var8 string
+				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(hostFilter == h)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates/agents.templ`, Line: 39, Col: 51}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var9 string
+				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(h)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates/agents.templ`, Line: 39, Col: 57}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</option>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</tbody></table>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</select></div><table class=\"data-table\"><thead><tr><th>ID</th><th>Name</th><th>Host</th><th>Status</th><th>Updated</th></tr></thead> <tbody id=\"agents-table-body\" hx-ext=\"sse\" sse-connect=\"/events?topics=agent\" sse-swap=\"agent\" hx-swap=\"outerHTML settle:50ms\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if len(agents) == 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<p class=\"empty-state\">No agents registered.</p>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<tr><td colspan=\"5\" class=\"empty-state\">No agents registered.</td></tr>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
+			} else {
+				for _, a := range agents {
+					templ_7745c5c3_Err = AgentRow(a).Render(ctx, templ_7745c5c3_Buffer)
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</tbody></table>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
 			}
 			return nil
 		})
