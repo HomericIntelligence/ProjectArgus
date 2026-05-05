@@ -34,6 +34,8 @@ Then access Grafana at <http://localhost:3000> (credentials: admin / the passwor
 - **HomericIntelligence - Agent Health**: Agent count, active/hibernated agents, uptime
 - **NATS Event Bus**: Message rate, JetStream storage, subject counts
 - **Task Throughput**: Tasks created/completed/failed per hour, dispatch latency
+- **Argus Stack Health**: Prometheus scrape-target up/down status, exporter health
+- **Log Explorer**: Syslog and NATS log streams via Loki
 
 ## Configuration
 
