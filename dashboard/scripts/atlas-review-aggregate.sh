@@ -8,7 +8,7 @@ TEAM_ID=${2:?Usage: atlas-review-aggregate.sh MILESTONE TEAM_ID [AGAMEMNON_URL]}
 AGAMEMNON_URL=${3:-http://localhost:8080}
 
 RESP=$(curl -fsS "${AGAMEMNON_URL}/v1/teams/${TEAM_ID}/tasks")
-TASKS=$(echo "$RESP" | jq -r '.tasks[]? // .[]? | "\(.subject | split(" review") | .[0]):\(.status // "pending"):\(.verdict // "pending")"')
+TASKS=$(echo "$RESP" | jq -r '.tasks[]? // .[]? | "\(.subject | split(" review") | .[0]):\(.status // "pending"):\(.result // .verdict // "pending")"')
 
 if [ -z "$TASKS" ]; then
   echo "Review wave ${MILESTONE} (team ${TEAM_ID}): 0 tasks found" >&2
