@@ -24,3 +24,8 @@ scrape_configs:
       format: ['prometheus']
     static_configs:
       - targets: ['172.20.0.1:4646']
+
+  - job_name: atlas
+    static_configs:
+      - targets: ['argus-dashboard:3002']
+    metrics_path: /metrics

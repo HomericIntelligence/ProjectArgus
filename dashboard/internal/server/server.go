@@ -20,6 +20,7 @@ type Server struct {
 	sse          *handlers.SSE
 	apiHandler   *handlers.Hosts
 	hostsHandler *handlers.HostsHandler
+	metrics      *AtlasMetrics
 }
 
 func New(cfg *config.Config, bus *events.Bus, cache *store.Cache) *Server {
@@ -32,6 +33,7 @@ func New(cfg *config.Config, bus *events.Bus, cache *store.Cache) *Server {
 				WithGrafanaURL(cfg.GrafanaURL).
 				WithNATSURLs(cfg.NATSDashboardURL, cfg.NATSTopURL, cfg.NATSMonURL).
 				WithMnemoReader(mnemosyne.NewReader(cfg.MnemosyneSkillsDir)),
+		metrics: newAtlasMetrics(),
 	}
 	s.srv = &http.Server{
 		Addr:         cfg.ListenAddr,
@@ -59,4 +61,9 @@ func (s *Server) Run(ctx context.Context) error {
 		defer cancel()
 		return s.srv.Shutdown(shutCtx)
 	}
+}
+
+// MetricsHandler returns an http.HandlerFunc that exposes Prometheus metrics.
+func (s *Server) MetricsHandler() http.HandlerFunc {
+	return s.metrics.Handler()
 }

@@ -1,0 +1,32 @@
+groups:
+  - name: atlas
+    rules:
+      - alert: AtlasNATSDisconnected
+        expr: atlas_nats_connected == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Atlas lost NATS connection for >2 min"
+
+      - alert: AtlasPollErrorsHigh
+        expr: increase(atlas_poll_errors_total[5m]) > 10
+        labels:
+          severity: warning
+        annotations:
+          summary: "Atlas REST poller errors elevated: {{ $labels.source }}"
+
+      - alert: AtlasSSEDropsHigh
+        expr: increase(atlas_sse_dropped_total[5m]) > 100
+        labels:
+          severity: warning
+        annotations:
+          summary: "Atlas SSE dropping events for slow subscribers"
+
+      - alert: AtlasUpstreamDown
+        expr: atlas_poll_errors_total{source=~"agamemnon|nestor|hermes"} > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Atlas upstream {{ $labels.source }} unreachable for >5 min"

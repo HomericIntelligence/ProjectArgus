@@ -6,17 +6,24 @@ import (
 )
 
 // securityHeaders adds baseline HTTP security headers to every response.
-// The frame-src directive includes the configured Grafana URL so that
-// the /grafana panel matrix iframes are permitted by CSP.
+// The frame-src directive includes the configured Grafana, Loki, and (when set)
+// NATS dashboard URLs so that embedded iframes are permitted by CSP.
+// X-Frame-Options is set to SAMEORIGIN to allow the Atlas dashboard to embed
+// its own panels.
 func (s *Server) securityHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
-		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("X-Frame-Options", "SAMEORIGIN")
 		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+
+		frameSrc := fmt.Sprintf("'self' %s %s", s.cfg.GrafanaURL, s.cfg.LokiURL)
+		if s.cfg.NATSDashboardURL != "" {
+			frameSrc += " " + s.cfg.NATSDashboardURL
+		}
 		w.Header().Set("Content-Security-Policy",
 			fmt.Sprintf(
-				"default-src 'self'; script-src 'self' https://unpkg.com; connect-src 'self'; style-src 'self'; img-src 'self' data:; frame-src 'self' %s %s",
-				s.cfg.GrafanaURL, s.cfg.LokiURL,
+				"default-src 'self'; script-src 'self' https://unpkg.com; connect-src 'self'; style-src 'self'; img-src 'self' data:; frame-src %s",
+				frameSrc,
 			),
 		)
 		next.ServeHTTP(w, r)

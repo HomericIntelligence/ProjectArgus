@@ -42,6 +42,8 @@ All configuration is via environment variables with the `ATLAS_` prefix:
 | `ATLAS_NATS_DASHBOARD_URL` | `` | Optional: URL of external nats-dashboard (linked on /nats page) |
 | `ATLAS_NATS_TOP_URL` | `` | Optional: ttyd URL serving nats-top (embedded as iframe on /nats page) |
 | `ATLAS_MNEMOSYNE_SKILLS_DIR` | `/mnt/mnemosyne/skills` | Path to Mnemosyne skills directory (read by /mnemosyne page) |
+| `ATLAS_LOKI_URL` | `http://loki:3100` | Loki URL (included in CSP frame-src) |
+| `ATLAS_EXPORTER_URL` | `http://argus-exporter:9100` | Homeric exporter URL |
 
 ## SSE Event Stream
 
@@ -105,6 +107,34 @@ Keepalive comment frames are sent every 15 seconds:
 | `GET` | `/partials/mnemosyne/search` | htmx fragment — filtered skill list |
 | `GET` | `/partials/mnemosyne/skill/{name}` | htmx fragment — rendered markdown body of a skill |
 | `GET` | `/static/*` | Static assets (CSS, JS) |
+
+## Authentication
+
+Set `ATLAS_AUTH_MODE` to configure the auth gate:
+
+| Mode | Behaviour |
+|------|-----------|
+| `none` (default) | No authentication required |
+| `bearer` | `Authorization: Bearer <token>` header required; SSE endpoints also accept `?token=<token>` |
+| `basic` | `Authorization: Basic <base64(user:pass)>` required |
+
+Set `ATLAS_AUTH_BEARER_TOKEN`, `ATLAS_AUTH_USER`, `ATLAS_AUTH_PASS` accordingly.
+`/healthz`, `/readyz`, and `/metrics` are always unauthenticated.
+
+## Metrics
+
+Atlas exposes Prometheus metrics at `/metrics` (always unauthenticated):
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `atlas_build_info` | gauge | Build info (version, goversion labels) |
+| `atlas_nats_connected` | gauge | 1 if NATS is connected, 0 otherwise |
+| `atlas_sse_connected_clients` | gauge | Active SSE client connections |
+| `atlas_poll_errors_total{source}` | counter | REST poller errors by source |
+| `atlas_poll_duration_seconds{source}` | histogram | REST poll latency |
+| `atlas_sse_dropped_total{subscriber}` | counter | SSE events dropped for slow clients |
+| `atlas_event_parse_errors_total{stream}` | counter | NATS event parse errors |
+| `atlas_nats_messages_processed_total{stream}` | counter | NATS messages processed |
 
 ## Building
 
