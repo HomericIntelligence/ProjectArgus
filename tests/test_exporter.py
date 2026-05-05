@@ -235,6 +235,20 @@ class TestCollectMetricNames(unittest.TestCase):
         self.assertIn("homeric_exporter_scrape_timestamp_seconds", self.output)
         self.assertIn("homeric_exporter_fetch_errors_total", self.output)
 
+    def test_nats_msg_metrics_use_gauge_names_not_total(self):
+        """nats_in_msgs and nats_out_msgs must not carry the _total counter suffix."""
+        self.assertIn("nats_in_msgs", self.output)
+        self.assertIn("nats_out_msgs", self.output)
+        self.assertNotIn("nats_in_msgs_total", self.output)
+        self.assertNotIn("nats_out_msgs_total", self.output)
+
+    def test_nats_msg_metrics_typed_as_gauge(self):
+        """Both renamed metrics must be declared as gauge, not counter."""
+        type_lines = [ln for ln in self.output.splitlines() if ln.startswith("# TYPE")]
+        type_map = {ln.split()[2]: ln.split()[3] for ln in type_lines}
+        self.assertEqual(type_map.get("nats_in_msgs"), "gauge")
+        self.assertEqual(type_map.get("nats_out_msgs"), "gauge")
+
 
 # ---------------------------------------------------------------------------
 # Test Handler (HTTP server)

@@ -133,8 +133,8 @@ def collect() -> str:
     # ── NATS ───────────────────────────────────────────────────────────────
     if nats_varz:
         gauge("nats_connections",    nats_varz.get("connections", 0))
-        gauge("nats_in_msgs_total",  nats_varz.get("in_msgs", 0))
-        gauge("nats_out_msgs_total", nats_varz.get("out_msgs", 0))
+        gauge("nats_in_msgs",  nats_varz.get("in_msgs", 0))
+        gauge("nats_out_msgs", nats_varz.get("out_msgs", 0))
         gauge("nats_in_bytes_total", nats_varz.get("in_bytes", 0))
         gauge("nats_out_bytes_total",nats_varz.get("out_bytes", 0))
         gauge("nats_slow_consumers", nats_varz.get("slow_consumers", 0))
