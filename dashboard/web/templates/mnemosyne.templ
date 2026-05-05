@@ -1,0 +1,74 @@
+package templates
+
+import "github.com/HomericIntelligence/atlas/internal/mnemosyne"
+
+templ MnemosynePage(skills []mnemosyne.Skill, query string) {
+	@Layout("Mnemosyne") {
+		<div class="filter-bar">
+			<input
+				type="search"
+				name="q"
+				value={ query }
+				hx-get="/partials/mnemosyne/search"
+				hx-trigger="keyup changed delay:200ms"
+				hx-target="#skill-list"
+				hx-include="this"
+				placeholder="Search skills (name, description, tags)..."
+			/>
+		</div>
+		<div id="skill-list">
+			@SkillList(skills)
+		</div>
+	}
+}
+
+templ SkillList(skills []mnemosyne.Skill) {
+	if len(skills) == 0 {
+		<p class="empty-state">No skills found.</p>
+	}
+	for _, s := range skills {
+		<details class="skill-card">
+			<summary class="skill-summary">
+				<span class="skill-name">{ s.Name }</span>
+				if s.Version != "" {
+					<span class={ "badge gray" }>{ s.Version }</span>
+				}
+				if s.Verification != "" {
+					<span class={ "badge " + verifyClass(s.Verification) }>{ s.Verification }</span>
+				}
+				<span class="skill-desc">{ s.Description }</span>
+			</summary>
+			<div
+				class="skill-body"
+				hx-get={ skillBodyPath(s.Name) }
+				hx-trigger="toggle once"
+				hx-swap="innerHTML"
+			>
+				<span class="ts">Loading...</span>
+			</div>
+		</details>
+	}
+}
+
+func verifyClass(v string) string {
+	switch v {
+	case "verified-ci":
+		return "green"
+	case "verified-local":
+		return "blue"
+	default:
+		return "gray"
+	}
+}
+
+func skillBodyPath(name string) string {
+	// sanitize: only allow alphanumeric, hyphen, underscore
+	safe := make([]byte, 0, len(name))
+	for i := 0; i < len(name); i++ {
+		c := name[i]
+		if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_' {
+			safe = append(safe, c)
+		}
+	}
+	return "/partials/mnemosyne/skill/" + string(safe)
+}

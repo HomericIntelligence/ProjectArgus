@@ -8,6 +8,8 @@ require (
 	github.com/a-h/templ v0.3.1001
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/nats-io/nats.go v1.37.0
+	github.com/yuin/goldmark v1.8.2
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (

@@ -14,15 +14,18 @@ const maxAgentEvents = 50
 // Cache is a thread-safe in-memory store for dashboard state.
 // It is extended with new fields as Atlas milestones add data sources.
 type Cache struct {
-	mu          sync.RWMutex
-	devices     []tailscale.Device // added in #158
-	probes      []catalog.ProbeResult
-	probesAt    time.Time
+	mu           sync.RWMutex
+	devices      []tailscale.Device    // added in #158
+	probes       []catalog.ProbeResult
+	probesAt     time.Time
 	// probes extended in #159
-	agents      []AgentRecord        // added in #161
-	tasks       []TaskRecord         // added in #161
-	natsStats   NATSStats            // added in #161
-	agentEvents map[string][]RawEvent // added in #163: per-agent event history
+	agents       []AgentRecord         // added in #161
+	tasks        []TaskRecord          // added in #161
+	natsStats    NATSStats             // added in #161
+	agentEvents  map[string][]RawEvent // added in #163: per-agent event history
+	natsStreams  []NATSStreamInfo      // added in #165: JetStream stream list
+	natsConsumers []NATSConsumerInfo   // added in #165: JetStream consumer list
+	natsConns    []NATSConnInfo        // added in #165: NATS connections
 }
 
 // NewCache returns an empty Cache.
@@ -175,4 +178,70 @@ func (c *Cache) AppendAgentEvent(agentID string, e RawEvent) {
 		evts = evts[len(evts)-maxAgentEvents:]
 	}
 	c.agentEvents[agentID] = evts
+}
+
+// SetNATSStreams replaces the cached JetStream stream list.
+func (c *Cache) SetNATSStreams(streams []NATSStreamInfo) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	cp := make([]NATSStreamInfo, len(streams))
+	copy(cp, streams)
+	c.natsStreams = cp
+}
+
+// GetNATSStreams returns a snapshot of the cached JetStream stream list.
+// The returned slice is a copy; mutations do not affect the cache.
+func (c *Cache) GetNATSStreams() []NATSStreamInfo {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	if len(c.natsStreams) == 0 {
+		return nil
+	}
+	cp := make([]NATSStreamInfo, len(c.natsStreams))
+	copy(cp, c.natsStreams)
+	return cp
+}
+
+// SetNATSConsumers replaces the cached JetStream consumer list.
+func (c *Cache) SetNATSConsumers(consumers []NATSConsumerInfo) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	cp := make([]NATSConsumerInfo, len(consumers))
+	copy(cp, consumers)
+	c.natsConsumers = cp
+}
+
+// GetNATSConsumers returns a snapshot of the cached JetStream consumer list.
+// The returned slice is a copy; mutations do not affect the cache.
+func (c *Cache) GetNATSConsumers() []NATSConsumerInfo {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	if len(c.natsConsumers) == 0 {
+		return nil
+	}
+	cp := make([]NATSConsumerInfo, len(c.natsConsumers))
+	copy(cp, c.natsConsumers)
+	return cp
+}
+
+// SetNATSConns replaces the cached NATS connection list.
+func (c *Cache) SetNATSConns(conns []NATSConnInfo) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	cp := make([]NATSConnInfo, len(conns))
+	copy(cp, conns)
+	c.natsConns = cp
+}
+
+// GetNATSConns returns a snapshot of the cached NATS connection list.
+// The returned slice is a copy; mutations do not affect the cache.
+func (c *Cache) GetNATSConns() []NATSConnInfo {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	if len(c.natsConns) == 0 {
+		return nil
+	}
+	cp := make([]NATSConnInfo, len(c.natsConns))
+	copy(cp, c.natsConns)
+	return cp
 }

@@ -12,7 +12,7 @@ func (s *Server) routes() http.Handler {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	r.Use(securityHeaders)
+	r.Use(s.securityHeaders)
 
 	r.Get("/healthz", s.handleHealthz)
 	r.Get("/readyz", s.handleHealthz)
@@ -24,6 +24,13 @@ func (s *Server) routes() http.Handler {
 	r.Get("/partials/agents/table", s.hostsHandler.AgentsTablePartial)
 	r.Get("/agents/{id}", s.hostsHandler.AgentDetail)
 	r.Get("/tasks/{id}", s.hostsHandler.TaskDetail)
+	r.Get("/grafana", s.hostsHandler.GrafanaPage)
+	r.Get("/nats", s.hostsHandler.NATSPage)
+	r.Get("/partials/nats/streams", s.hostsHandler.NATSStreamsPartial)
+	r.Get("/partials/nats/connections", s.hostsHandler.NATSConnsPartial)
+	r.Get("/mnemosyne", s.hostsHandler.MnemosynePage)
+	r.Get("/partials/mnemosyne/search", s.hostsHandler.MnemosyneSearch)
+	r.Get("/partials/mnemosyne/skill/{name}", s.hostsHandler.MnemosyneSkillBody)
 	r.Get("/events", s.sse.ServeHTTP)
 	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
 

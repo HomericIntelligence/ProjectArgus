@@ -12,6 +12,8 @@ type Config struct {
 	LogLevel            slog.Level
 	NATSURL             string
 	NATSMonURL          string
+	NATSDashboardURL    string // ATLAS_NATS_DASHBOARD_URL, default ""
+	NATSTopURL          string // ATLAS_NATS_TOP_URL, default ""
 	AgamemnonURL        string
 	NestorURL           string
 	HermesURL           string
@@ -52,6 +54,8 @@ func Load() *Config {
 		LogLevel:           logLevel,
 		NATSURL:            getenv("ATLAS_NATS_URL", "nats://nats:4222"),
 		NATSMonURL:         getenv("ATLAS_NATS_MON_URL", "http://nats:8222"),
+		NATSDashboardURL:   getenv("ATLAS_NATS_DASHBOARD_URL", ""),
+		NATSTopURL:         getenv("ATLAS_NATS_TOP_URL", ""),
 		AgamemnonURL:       getenv("ATLAS_AGAMEMNON_URL", "http://agamemnon:8080"),
 		NestorURL:          getenv("ATLAS_NESTOR_URL", "http://nestor:8081"),
 		HermesURL:          getenv("ATLAS_HERMES_URL", "http://hermes:8080"),
