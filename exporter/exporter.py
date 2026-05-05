@@ -171,8 +171,8 @@ class Handler(BaseHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
 
-    def log_message(self, fmt, *args):
-        pass
+    def log_message(self, fmt: str, *args: object) -> None:
+        log.debug(fmt, *args)
 
 
 if __name__ == "__main__":
