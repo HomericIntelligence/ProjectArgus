@@ -90,6 +90,10 @@ Keepalive comment frames are sent every 15 seconds:
 | `GET` | `/events` | SSE event stream (see below) |
 | `GET` | `/api/hosts` | JSON array of hosts with per-service probe results |
 | `GET` | `/partials/host/{name}` | htmx fragment — single host card (used by 5 s poll) |
+| `GET` | `/agents` | Agents list page with filter bar and live SSE row-swap |
+| `GET` | `/partials/agents/table` | htmx fragment — filtered agents tbody |
+| `GET` | `/agents/{id}` | Agent detail page with live 50-event tail |
+| `GET` | `/tasks/{id}` | Task detail page with live event tail |
 | `GET` | `/static/*` | Static assets (CSS, JS) |
 
 ## Building

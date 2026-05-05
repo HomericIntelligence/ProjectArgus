@@ -4,7 +4,7 @@ import "github.com/HomericIntelligence/atlas/internal/store"
 
 templ AgentRow(a store.AgentRecord) {
 	<tr id={ "agent-row-" + a.ID }
-		hx-get={ "/agents/" + a.ID }
+		hx-get={ agentPath(a.ID) }
 		hx-target="main"
 		hx-push-url="true"
 		style="cursor:pointer">
@@ -32,4 +32,17 @@ func agentStatusClass(s string) string {
 	default:
 		return "red"
 	}
+}
+
+// agentPath returns a safe relative URL path for an agent ID.
+// Only alphanumeric and hyphen/underscore characters are preserved.
+func agentPath(id string) string {
+	safe := make([]byte, 0, len(id))
+	for i := 0; i < len(id); i++ {
+		c := id[i]
+		if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_' {
+			safe = append(safe, c)
+		}
+	}
+	return "/agents/" + string(safe)
 }
