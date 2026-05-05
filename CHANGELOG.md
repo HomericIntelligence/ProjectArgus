@@ -7,9 +7,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased] — targeting v0.2.0
 
 ### Added
-<!-- items from v0.2.0 milestone -->
-
-### Added
 
 - Atlas service (M1–M3): Go module with Chi server, hello-world page, SSE endpoint,
   NATS/JetStream subscribers, Tailscale sources, service probe matrix, and hosts page
