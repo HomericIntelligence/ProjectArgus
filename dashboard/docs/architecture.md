@@ -34,9 +34,11 @@ Mnemosyne browser
 ## Security
 
 - All HTML responses include `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`
-- CSP `frame-src` is built statically at startup from `ATLAS_GRAFANA_URL`, `ATLAS_LOKI_URL`, and optionally `ATLAS_NATS_DASHBOARD_URL` — no user input reaches the CSP header
+- CSP `frame-src` is built statically at startup from `ATLAS_GRAFANA_URL`, `ATLAS_LOKI_URL`, and optionally
+  `ATLAS_NATS_DASHBOARD_URL` — no user input reaches the CSP header
 - Auth middleware (none/basic/bearer) wraps all routes except `/healthz`, `/readyz`, `/metrics`
 - SSE/EventSource bearer fallback via `?token=` allows JS EventSource to authenticate
 - Mnemosyne markdown rendering uses goldmark with `WithUnsafe()` disabled — raw HTML in skill files is stripped
-- Grafana `from`/`to` query params validated against `^(now(-[0-9]+(s|m|h|d|w|y))?|[0-9]{13})$` before embedding in iframe URLs
+- Grafana `from`/`to` query params validated against `^(now(-[0-9]+(s|m|h|d|w|y))?|[0-9]{13})$`
+  before embedding in iframe URLs
 - iframe sandbox: `allow-scripts allow-popups` only — never `allow-same-origin` alongside `allow-scripts`
