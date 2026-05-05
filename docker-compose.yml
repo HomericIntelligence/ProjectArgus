@@ -1,6 +1,9 @@
 networks:
   argus:
     driver: bridge
+  argus-loki:
+    driver: bridge
+    internal: true
 
 services:
   prometheus:
@@ -57,7 +60,7 @@ services:
       retries: 3
       start_period: 10s
     networks:
-      - argus
+      - argus-loki
     deploy:
       resources:
         limits:
@@ -75,6 +78,7 @@ services:
       - ./secrets/htpasswd:/etc/nginx/htpasswd:ro
     networks:
       - argus
+      - argus-loki
     depends_on:
       - loki
     deploy:
@@ -105,7 +109,7 @@ services:
       retries: 3
       start_period: 10s
     networks:
-      - argus
+      - argus-loki
     depends_on:
       - loki
     deploy:
@@ -143,7 +147,7 @@ services:
       - argus
     depends_on:
       - prometheus
-      - loki
+      - loki-proxy
     deploy:
       resources:
         limits:

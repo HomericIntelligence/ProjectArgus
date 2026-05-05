@@ -16,7 +16,7 @@ datasources:
     type: loki
     uid: loki
     access: proxy
-    url: http://loki:3100
+    url: http://loki-proxy
     isDefault: false
     editable: false
     jsonData:
