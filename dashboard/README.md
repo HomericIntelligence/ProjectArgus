@@ -33,6 +33,9 @@ All configuration is via environment variables with the `ATLAS_` prefix:
 | `ATLAS_PROMETHEUS_URL` | `http://prometheus:9090` | Prometheus URL |
 | `ATLAS_GRAFANA_URL` | `http://grafana:3000` | Grafana URL |
 | `ATLAS_AUTH_MODE` | `none` | Auth mode (none/basic/bearer) |
+| `ATLAS_AUTH_BEARER_TOKEN` | `` | Bearer token (required when `ATLAS_AUTH_MODE=bearer`) |
+| `ATLAS_AUTH_USER` | `` | Basic auth username (required when `ATLAS_AUTH_MODE=basic`) |
+| `ATLAS_AUTH_PASS` | `` | Basic auth password (required when `ATLAS_AUTH_MODE=basic`) |
 | `ATLAS_TAILSCALE_SOURCE` | `static` | Device discovery: `static`, `cli`, `api`, `auto` |
 | `ATLAS_WORKER_HOST_IP` | `127.0.0.1` | Static source: IP of worker host |
 | `ATLAS_CONTROL_HOST_IP` | `127.0.0.1` | Static source: IP of control host |
@@ -92,6 +95,7 @@ Keepalive comment frames are sent every 15 seconds:
 | `GET` | `/hosts` | Tailscale host grid — cards refresh every 5 s via htmx |
 | `GET` | `/healthz` | Liveness probe — returns `ok` |
 | `GET` | `/readyz` | Readiness probe — returns `ok` |
+| `GET` | `/metrics` | Prometheus metrics exposition (always unauthenticated) |
 | `GET` | `/events` | SSE event stream (see below) |
 | `GET` | `/api/hosts` | JSON array of hosts with per-service probe results |
 | `GET` | `/partials/host/{name}` | htmx fragment — single host card (used by 5 s poll) |
@@ -120,6 +124,10 @@ Set `ATLAS_AUTH_MODE` to configure the auth gate:
 
 Set `ATLAS_AUTH_BEARER_TOKEN`, `ATLAS_AUTH_USER`, `ATLAS_AUTH_PASS` accordingly.
 `/healthz`, `/readyz`, and `/metrics` are always unauthenticated.
+
+> **Note:** `/metrics` is public regardless of `ATLAS_AUTH_MODE`. It exposes internal counters
+> (NATS connection state, error rates, SSE client counts, build version). Network-restrict port
+> 3002 or use a reverse-proxy to protect it if Atlas faces an untrusted network.
 
 ## Metrics
 

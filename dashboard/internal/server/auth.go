@@ -1,6 +1,7 @@
 package server
 
 import (
+	"crypto/subtle"
 	"encoding/base64"
 	"net/http"
 	"strings"
@@ -48,6 +49,7 @@ func Middleware(mode AuthMode, user, pass, bearerToken string) func(http.Handler
 }
 
 // checkBasic validates an HTTP Basic auth header against the expected credentials.
+// Comparisons use constant-time equality to prevent timing attacks.
 func checkBasic(r *http.Request, user, pass string) bool {
 	authHeader := r.Header.Get("Authorization")
 	if !strings.HasPrefix(authHeader, "Basic ") {
@@ -62,21 +64,29 @@ func checkBasic(r *http.Request, user, pass string) bool {
 	if len(parts) != 2 {
 		return false
 	}
-	return parts[0] == user && parts[1] == pass
+	userOK := subtle.ConstantTimeCompare([]byte(parts[0]), []byte(user)) == 1
+	passOK := subtle.ConstantTimeCompare([]byte(parts[1]), []byte(pass)) == 1
+	return userOK && passOK
 }
 
 // checkBearer validates a Bearer token from either the Authorization header or
 // the ?token= query parameter (for SSE / EventSource compatibility).
+// An empty configured token always rejects — prevents accidental open access
+// when ATLAS_AUTH_BEARER_TOKEN is unset. Comparisons use constant-time equality
+// to prevent timing attacks.
 func checkBearer(r *http.Request, token string) bool {
+	if token == "" {
+		return false
+	}
 	// Check Authorization: Bearer <token> header first.
 	authHeader := r.Header.Get("Authorization")
 	if strings.HasPrefix(authHeader, "Bearer ") {
 		provided := strings.TrimPrefix(authHeader, "Bearer ")
-		return provided == token
+		return subtle.ConstantTimeCompare([]byte(provided), []byte(token)) == 1
 	}
 	// Fall back to ?token= query parameter (EventSource compat).
 	if qt := r.URL.Query().Get("token"); qt != "" {
-		return qt == token
+		return subtle.ConstantTimeCompare([]byte(qt), []byte(token)) == 1
 	}
 	return false
 }

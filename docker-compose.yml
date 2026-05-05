@@ -183,6 +183,36 @@ services:
           memory: 128m
           cpus: "0.10"
 
+  argus-dashboard:
+    image: ${ATLAS_IMAGE:-ghcr.io/homericintelligence/atlas:latest}
+    container_name: argus-dashboard
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      ATLAS_LISTEN_ADDR: ":3002"
+      ATLAS_AGAMEMNON_URL: ${AGAMEMNON_URL:-http://172.20.0.1:8080}
+      ATLAS_NESTOR_URL: ${NESTOR_URL:-http://172.20.0.1:8081}
+      ATLAS_NATS_MON_URL: ${NATS_URL:-http://172.24.0.1:8222}
+      ATLAS_GRAFANA_URL: "http://argus-grafana:3000"
+      ATLAS_LOKI_URL: "http://argus-loki-proxy:80"
+      ATLAS_PROMETHEUS_URL: "http://argus-prometheus:9090"
+      ATLAS_AUTH_MODE: ${ATLAS_AUTH_MODE:-none}
+      ATLAS_AUTH_BEARER_TOKEN: ${ATLAS_AUTH_BEARER_TOKEN:-}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3002/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - argus
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+          cpus: "0.25"
+
   # dev-only: interactive debug shell for exec-based troubleshooting
   # Start with: docker compose --profile dev up -d debug-shell
   debug-shell:
