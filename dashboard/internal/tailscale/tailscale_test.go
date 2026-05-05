@@ -107,7 +107,7 @@ func TestCLISource_ParseError(t *testing.T) {
 	dir := t.TempDir()
 	fakeTailscale := dir + "/tailscale"
 	script := "#!/bin/sh\necho 'not valid json'\n"
-	if err := os.WriteFile(fakeTailscale, []byte(script), 0o755); err != nil {
+	if err := os.WriteFile(fakeTailscale, []byte(script), 0o755); err != nil { //nolint:gosec // G306: test executable script must be world-executable
 		t.Fatalf("WriteFile: %v", err)
 	}
 
