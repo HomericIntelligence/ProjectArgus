@@ -6,10 +6,15 @@ connections are made during the test suite.
 """
 from __future__ import annotations
 
+import contextlib
 import io
 import json
 import sys
+import threading
 import unittest
+import urllib.error
+import urllib.request
+from http.server import ThreadingHTTPServer
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -254,50 +259,34 @@ class TestCollectMetricNames(unittest.TestCase):
 # Test Handler (HTTP server)
 # ---------------------------------------------------------------------------
 
-class _FakeSocket:
-    """Minimal socket-like object for BaseHTTPRequestHandler tests."""
-    def __init__(self, request_bytes: bytes):
-        self._data = request_bytes
-        self._wfile = io.BytesIO()
-
-    def makefile(self, mode, **kwargs):
-        if "r" in mode:
-            return io.BufferedReader(io.BytesIO(self._data))
-        return self._wfile
-
-    def sendall(self, data: bytes):
-        self._wfile.write(data)
-
-
-def _make_handler(path: str) -> tuple[exporter_mod.Handler, io.BytesIO]:
-    """Instantiate Handler for a fake GET request to *path*, return (handler, wfile)."""
-    request_bytes = f"GET {path} HTTP/1.1\r\nHost: localhost\r\n\r\n".encode()
-    fake_socket = _FakeSocket(request_bytes)
-    server = MagicMock()
-    # BaseHTTPRequestHandler.__init__ calls setup() then handle() then finish()
-    # We call the constructor which invokes handle() -> do_GET()
-    # We need to suppress that here; instead we'll call do_GET manually after setup.
-    handler = exporter_mod.Handler.__new__(exporter_mod.Handler)
-    handler.rfile = io.BufferedReader(io.BytesIO(request_bytes))
-    handler.wfile = fake_socket._wfile
-    handler.client_address = ("127.0.0.1", 9999)
-    handler.server = server
-    handler.path = path
-    handler.request_version = "HTTP/1.1"
-    handler.command = "GET"
-    handler.requestline = f"GET {path} HTTP/1.1"
-    handler.headers = {}
-    handler.connection = MagicMock()
-    return handler, fake_socket._wfile
+@contextlib.contextmanager
+def _live_server():
+    """Spin up a real ThreadingHTTPServer on an ephemeral port; yield the port."""
+    server = ThreadingHTTPServer(("127.0.0.1", 0), exporter_mod.Handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        yield server.server_address[1]
+    finally:
+        server.shutdown()
 
 
 class TestHandler(unittest.TestCase):
-    def _get_response(self, path: str, mock_collect_output: str = "# TYPE x gauge\nx{} 1\n"):
-        handler, wfile = _make_handler(path)
+    def _get_response(self, path: str, mock_collect_output: str = "# TYPE x gauge\nx{} 1\n") -> str:
         with patch.object(exporter_mod, "collect", return_value=mock_collect_output):
-            handler.do_GET()
-        wfile.seek(0)
-        return wfile.read().decode(errors="replace")
+            with _live_server() as port:
+                url = f"http://127.0.0.1:{port}{path}"
+                try:
+                    resp = urllib.request.urlopen(url, timeout=5)
+                    status_line = f"HTTP/1.1 {resp.status} {resp.reason}"
+                    headers = "\r\n".join(f"{k}: {v}" for k, v in resp.headers.items())
+                    body = resp.read().decode()
+                    return f"{status_line}\r\n{headers}\r\n\r\n{body}"
+                except urllib.error.HTTPError as exc:
+                    status_line = f"HTTP/1.1 {exc.code} {exc.reason}"
+                    headers = "\r\n".join(f"{k}: {v}" for k, v in exc.headers.items())
+                    body = exc.read().decode()
+                    return f"{status_line}\r\n{headers}\r\n\r\n{body}"
 
     def test_health_returns_200(self):
         response = self._get_response("/health")
