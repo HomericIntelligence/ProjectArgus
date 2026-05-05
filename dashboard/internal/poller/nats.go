@@ -44,7 +44,7 @@ type jszStreamConfig struct {
 type jszStreamState struct {
 	Messages  uint64 `json:"messages"`
 	Bytes     uint64 `json:"bytes"`
-	Consumers int    `json:"num_consumers"`
+	Consumers int    `json:"consumer_count"`
 }
 
 // connzResponse is the NATS /connz response.
