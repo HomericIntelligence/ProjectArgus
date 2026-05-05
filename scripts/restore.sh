@@ -23,6 +23,6 @@ if [[ ! -f "$FILE" ]]; then
 fi
 
 echo "Restoring $VOLUME from $FILE ..."
-docker run --rm -v "${VOLUME}:/data" -v "$(realpath "$FILE"):/backup.tar.gz:ro" \
+${CONTAINER_CMD:-docker} run --rm -v "${VOLUME}:/data" -v "$(realpath "$FILE"):/backup.tar.gz:ro" \
     alpine sh -c "cd /data && tar xzf /backup.tar.gz"
 echo "✓ Restore complete: $VOLUME"
